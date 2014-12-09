@@ -1,0 +1,27 @@
+{
+  "name": "react-slide",
+  "version": "0.1.0",
+  "description": "React Slider",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "make'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/radubrehar/react-slide.git"
+  },
+  "keywords": [
+    "slider",
+    "slide",
+    "slider",
+    "field",
+    "react-component",
+    "react"
+  ],
+  "author": "Radu Brehar",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/radubrehar/react-slide/issues"
+  },
+  "homepage": "https://github.com/radubrehar/react-slide"
+}

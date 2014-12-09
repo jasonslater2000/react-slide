@@ -70,15 +70,11 @@ function absoluteCenter(style){
 
 function getPercentageForValue(value, props){
     value = value || 0
+
     var range = props.endValue - props.startValue
     var diff  = value - props.startValue
-    // }
 
-    var result = diff * 100 / range
-
-    // console.log(value, ' = ', result)
-
-    return result
+    return diff * 100 / range
 }
 
 function getValueForPercentage(percentage, props){
@@ -119,9 +115,8 @@ function positionStyle(value, props, style){
     var offset = getOffset(value, props)// + '%'
     var horiz  = props.orientation == 'horizontal'
 
-    style.width = 100 - offset + '%'
-    // style[horiz? 'right' : 'bottom'] = offset
-    style[horiz? 'bottom':'right'] = 0
+    style[horiz?'width':'height'] = 100 - offset + '%'
+    // style[horiz? 'bottom':'right'] = 0
 
     return style
 }
@@ -156,6 +151,7 @@ module.exports = React.createClass({
         onDrag  : React.PropTypes.func,
         onChange: React.PropTypes.func,
 
+
         handleSize: stringOrNumber,
 
         orientation: function(props, propName){
@@ -174,6 +170,8 @@ module.exports = React.createClass({
             endValue: 100,
             step: 1,
 
+            trackRadius: 10,
+
             defaultStyle: {
                 position: 'relative',
                 display: 'flex'
@@ -181,24 +179,25 @@ module.exports = React.createClass({
 
             defaultTrackStyle: absoluteCenter({
                 position: 'relative',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                backgroundColor: 'rgb(216, 216, 213)'
             }),
 
             defaultTrackFillStyle: {
                 position: 'absolute',
                 width   : '100%',
                 height  : '100%',
+                boxSizing: 'content-box',
                 backgroundColor: 'gray'
             },
 
             defaultTrackLineStyle: absoluteCenter({
-                backgroundColor: 'white'
+                // backgroundColor: 'white'
             }),
 
             defaultHandleStyle: {
                 position: 'absolute',
                 backgroundColor: '#3f51b5',
-                borderRadius: 100,
                 cursor: 'pointer',
                 zIndex: 1
             },
@@ -259,37 +258,51 @@ module.exports = React.createClass({
     renderTrack: function(props, state){
 
         var value = props.value
+        var horiz = props.orientation === 'horizontal'
 
         var trackStyle     = assign({}, props.defaultTrackStyle, props.trackStyle, { flex: 1, width: '100%'})
         var trackLineStyle = assign({}, props.defaultTrackLineStyle, props.trackLineStyle)
         var trackFillStyle = assign({}, props.defaultTrackFillStyle, props.trackFillStyle)
 
+        if (props.trackRadius){
+            trackStyle.borderRadius = trackStyle.borderRadius || props.trackRadius
+            if (horiz){
+                trackFillStyle.borderTopLeftRadius = trackFillStyle.borderTopLeftRadius || props.trackRadius
+                trackFillStyle.borderBottomLeftRadius = trackFillStyle.borderBottomLeftRadius || props.trackRadius
+            } else {
+                trackFillStyle.borderTopLeftRadius = trackFillStyle.borderTopLeftRadius || props.trackRadius
+                trackFillStyle.borderTopRightRadius = trackFillStyle.borderTopRightRadius || props.trackRadius
+            }
+        }
+
         positionStyle(value, props, trackFillStyle)
 
-        // trackStyle.overflow = 'hidden'
 
         var handleSize = this.getHandleSize(props)
+        var size
 
-        if (props.orientation === 'horizontal'){
-            trackLineStyle.left  = handleSize.width / 2
-            trackLineStyle.right = handleSize.width / 2
+        if (horiz){
+            size = handleSize.width / 2
+
+            trackLineStyle.left  = size
+            trackLineStyle.right = size
+            trackFillStyle.paddingLeft = size
+            trackFillStyle.marginLeft = -size
         } else {
-            trackLineStyle.top    = handleSize.height / 2
-            trackLineStyle.bottom = handleSize.height / 2
+
+            size = handleSize.height / 2
+
+            trackLineStyle.top  = size
+            trackLineStyle.bottom = size
+            trackFillStyle.paddingTop = size
+            trackFillStyle.marginTop = -size
         }
 
         var handle = this.renderTrackHandle(props, state)
 
-        assign(trackFillStyle, {
-            width: 100 - getOffset(value, props) + '%',
-            position: 'absolute',
-            left: 0,
-            height: '100%'
-        })
-
         return (
                 <div className="z-track" style={trackStyle} onMouseDown={this.handleTrackMouseDown}>
-                    <div className="z-track-line" style={trackLineStyle}>
+                    <div ref="trackLine" className="z-track-line" style={trackLineStyle}>
                         <div style={trackFillStyle} />
                         {handle}
                     </div>
@@ -380,6 +393,10 @@ module.exports = React.createClass({
             handleStyle.top = offset
         }
 
+        if (props.trackRadius){
+            handleStyle.borderRadius = handleStyle.borderRadius || props.trackRadius
+        }
+
         return <div
                     ref="handle"
                     data-value={value}
@@ -414,11 +431,12 @@ module.exports = React.createClass({
     getAvailableDragSize: function(props){
         var horiz = props.orientation === 'horizontal'
         var dom = this.getDOMNode()
+        var region = Region.from(this.refs.trackLine.getDOMNode())
         var handleSize = this.getHandleSize(props)
 
         return horiz?
-                    dom.clientWidth - handleSize.width:
-                    dom.clientHeight - handleSize.height
+                    region.width:
+                    region.height
     },
 
     getRegion: function(){

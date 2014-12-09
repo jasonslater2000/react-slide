@@ -37,9 +37,10 @@ var App = React.createClass({
             <div className="App" style={{padding: 10}}>
             <Slider
                 tickStep={10}
+                trackRadius={0}
                 handleWidth={20}
                 handleHeight='100%'
-                trackStyle={{height: 20, borderRadius: 100}}
+                trackStyle={{height: 20}}
                 orientation="horizontal" handleSize={20} style={firstStyle} onDrag={this.onChange} value={VALUE} onChangex={this.onChange}/>
 
                 <Slider

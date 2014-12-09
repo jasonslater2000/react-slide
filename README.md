@@ -1,0 +1,4 @@
+react-slide
+===========
+
+React Slider

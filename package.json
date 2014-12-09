@@ -4,7 +4,36 @@
   "description": "React Slider",
   "main": "lib/index.js",
   "scripts": {
-    "test": "make'"
+    "test": "make",
+    "lib": "./node_modules/.bin/gulp",
+    "build-style": "./node_modules/.bin/webpack --progress --colors --config build-style.config.js",
+    "dist": "./node_modules/.bin/webpack --progress --colors --config dist.config.js",
+    "dist.min": "./node_modules/.bin/webpack --progress --colors --optimize-minimize --optimize-occurence-order --optimize-dedupe --config dist.min.config.js",
+    "build": "npm run lib && npm run dist && npm run dist.min && npm run build-style",
+    "serve": "./node_modules/.bin/http-server -p 9091",
+    "dev": "./node_modules/.bin/webpack-dev-server --progress --colors --port 9090 --content-base http://localhost:9091"
+  },
+  "devDependencies": {
+    "css-loader": "^0.9.0",
+    "extract-text-webpack-plugin": "^0.3.5",
+    "gulp": "^3.8.10",
+    "gulp-react": "^2.0.0",
+    "http-server": "^0.7.4",
+    "jsx-loader": "^0.12.2",
+    "nib": "^1.0.4",
+    "style-loader": "^0.8.2",
+    "stylus": "^0.49.3",
+    "stylus-loader": "^0.5.0",
+    "webpack": "^1.4.13",
+    "webpack-dev-server": "^1.6.6"
+  },
+  "dependencies": {
+    "css-utils": "^1.0.0",
+    "drag-helper": "^1.2.0",
+    "normalize.css": "^3.0.2",
+    "object-assign": "^2.0.0",
+    "react": "^0.12.1",
+    "region": "^2.0.0"
   },
   "repository": {
     "type": "git",

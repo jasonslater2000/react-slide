@@ -220,6 +220,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            enableTrackClick: true,
 
 	            defaultStyle: {
+
 	            },
 
 	            defaultVerticalStyle: {
@@ -265,13 +266,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	                cursor: 'pointer',
 	                zIndex: 1
 	            },
-	            defaultHorizontalHandleStyle: {
+	            defaultHorizontalHandleSize: {
 	                width : 10,
 	                height: 20
 	            },
-	            defaultVerticalHandleStyle: {
+	            defaultVerticalHandleSize: {
 	                width : 20,
-	                height: 10,
+	                height: 10
+	            },
+	            defaultHorizontalHandleStyle: {
+	                transform: 'translate3d(0px, -50%, 0px)',
+	                top: '50%'
+	            },
+	            defaultVerticalHandleStyle: {
 	                transform: 'translate3d(-50%, 0px, 0px)',
 	                left: '50%'
 	            },
@@ -550,9 +557,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 
 	    getHandleSize: function(props){
+	        var obj = props.orientation === 'horizontal'?
+	                    props.defaultHorizontalHandleSize:
+	                    props.defaultVerticalHandleSize
 	        return {
-	            width : props.handleWidth || props.handleSize,
-	            height: props.handleHeight || props.handleSize,
+	            width : props.handleWidth || props.handleSize || obj.width,
+	            height: props.handleHeight || props.handleSize || obj.height,
 	        }
 	    },
 
@@ -571,7 +581,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            handleStyle.left = offset
 	            handleStyle.marginLeft = -handleSize.width/2
 	            handleStyle.marginTop  = handleStyle.marginBottom = 'auto'
-	            handleStyle.top = handleStyle.bottom = 0
+	            // handleStyle.top = handleStyle.bottom = 0
 	        } else {
 	            handleStyle.top = offset
 	            handleStyle.marginTop = -handleSize.height/2
@@ -616,7 +626,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        event.preventDefault()
 	        event.stopPropagation()
 
-	        this.setupDrag(props)
+	        this.setupDrag(event, props)
 	    },
 
 	    getHandle: function(){
@@ -650,7 +660,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return Region.from(this.getDOMNode())
 	    },
 
-	    setupDrag: function(props, initialDiff){
+	    setupDrag: function(event, props, initialDiff){
 
 	        initialDiff = initialDiff || 0
 
@@ -769,8 +779,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict'
 
-	var F      = __webpack_require__(7)
-	var copy   = __webpack_require__(6).copy
+	var F      = __webpack_require__(6)
+	var copy   = __webpack_require__(7).copy
 	var Region = __webpack_require__(8)
 
 	var Helper = function(config){
@@ -948,13 +958,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var hasOwn    = __webpack_require__(12)
-	var newify    = __webpack_require__(13)
-	var copyUtils = __webpack_require__(16)
+	var hasOwn    = __webpack_require__(15)
+	var newify    = __webpack_require__(22)
+	var copyUtils = __webpack_require__(23)
 	var copyList  = copyUtils.copyList
 	var copy      = copyUtils.copy
-	var isObject  = __webpack_require__(14).object
-	var EventEmitter = __webpack_require__(15).EventEmitter
+	var isObject  = __webpack_require__(25).object
+	var EventEmitter = __webpack_require__(24).EventEmitter
 	var inherits = __webpack_require__(9)
 	var VALIDATE = __webpack_require__(10)
 
@@ -1985,207 +1995,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = function(){
-
-	    'use strict'
-
-	    var HAS_OWN       = Object.prototype.hasOwnProperty,
-	        STR_OBJECT    = 'object',
-	        STR_UNDEFINED = 'undefined'
-
-	    return {
-
-	        /**
-	         * Copies all properties from source to destination
-	         *
-	         *      copy({name: 'jon',age:5}, this);
-	         *      // => this will have the 'name' and 'age' properties set to 'jon' and 5 respectively
-	         *
-	         * @param {Object} source
-	         * @param {Object} destination
-	         *
-	         * @return {Object} destination
-	         */
-	        copy: __webpack_require__(17),
-
-	        /**
-	         * Copies all properties from source to destination, if the property does not exist into the destination
-	         *
-	         *      copyIf({name: 'jon',age:5}, {age:7})
-	         *      // => { name: 'jon', age: 7}
-	         *
-	         * @param {Object} source
-	         * @param {Object} destination
-	         *
-	         * @return {Object} destination
-	         */
-	        copyIf: __webpack_require__(18),
-
-	        /**
-	         * Copies all properties from source to a new object, with the given value. This object is returned
-	         *
-	         *      copyAs({name: 'jon',age:5})
-	         *      // => the resulting object will have the 'name' and 'age' properties set to 1
-	         *
-	         * @param {Object} source
-	         * @param {Object/Number/String} [value=1]
-	         *
-	         * @return {Object} destination
-	         */
-	        copyAs: function(source, value){
-
-	            var destination = {}
-
-	            value = value || 1
-
-	            if (source != null && typeof source === STR_OBJECT ){
-
-	                for (var i in source) if ( HAS_OWN.call(source, i) ) {
-	                    destination[i] = value
-	                }
-
-	            }
-
-	            return destination
-	        },
-
-	        /**
-	         * Copies all properties named in the list, from source to destination
-	         *
-	         *      copyList({name: 'jon',age:5, year: 2006}, {}, ['name','age'])
-	         *      // => {name: 'jon', age: 5}
-	         *
-	         * @param {Object} source
-	         * @param {Object} destination
-	         * @param {Array} list the array with the names of the properties to copy
-	         *
-	         * @return {Object} destination
-	         */
-	        copyList: __webpack_require__(19),
-
-	        /**
-	         * Copies all properties named in the list, from source to destination, if the property does not exist into the destination
-	         *
-	         *      copyListIf({name: 'jon',age:5, year: 2006}, {age: 10}, ['name','age'])
-	         *      // => {name: 'jon', age: 10}
-	         *
-	         * @param {Object} source
-	         * @param {Object} destination
-	         * @param {Array} list the array with the names of the properties to copy
-	         *
-	         * @return {Object} destination
-	         */
-	        copyListIf: __webpack_require__(20),
-
-	        /**
-	         * Copies all properties named in the namedKeys, from source to destination
-	         *
-	         *      copyKeys({name: 'jon',age:5, year: 2006, date: '2010/05/12'}, {}, {name:1 ,age: true, year: 'theYear'})
-	         *      // => {name: 'jon', age: 5, theYear: 2006}
-	         *
-	         * @param {Object} source
-	         * @param {Object} destination
-	         * @param {Object} namedKeys an object with keys denoting the properties to be copied
-	         *
-	         * @return {Object} destination
-	         */
-	        copyKeys: __webpack_require__(21),
-
-	        /**
-	         * Copies all properties named in the namedKeys, from source to destination,
-	         * but only if the property does not already exist in the destination object
-	         *
-	         *      copyKeysIf({name: 'jon',age:5, year: 2006}, {aname: 'test'}, {name:'aname' ,age: true})
-	         *      // => {aname: 'test', age: 5}
-	         *
-	         * @param {Object} source
-	         * @param {Object} destination
-	         * @param {Object} namedKeys an object with keys denoting the properties to be copied
-	         *
-	         * @return {Object} destination
-	         */
-	        copyKeysIf: __webpack_require__(22),
-
-	        copyExceptKeys: function(source, destination, exceptKeys){
-	            destination = destination || {}
-	            exceptKeys  = exceptKeys  || {}
-
-	            if (source != null && typeof source === STR_OBJECT ){
-
-	                for (var i in source) if ( HAS_OWN.call(source, i) && !HAS_OWN.call(exceptKeys, i) ) {
-
-	                    destination[i] = source[i]
-	                }
-
-	            }
-
-	            return destination
-	        },
-
-	        /**
-	         * Copies the named keys from source to destination.
-	         * For the keys that are functions, copies the functions bound to the source
-	         *
-	         * @param  {Object} source      The source object
-	         * @param  {Object} destination The target object
-	         * @param  {Object} namedKeys   An object with the names of the keys to copy The values from the keys in this object
-	         *                              need to be either numbers or booleans if you want to copy the property under the same name,
-	         *                              or a string if you want to copy the property under a different name
-	         * @return {Object}             Returns the destination object
-	         */
-	        bindCopyKeys: function(source, destination, namedKeys){
-	            if (arguments.length == 2){
-	                namedKeys = destination
-	                destination = null
-	            }
-
-	            destination = destination || {}
-
-	            if (
-	                       source != null && typeof source    === STR_OBJECT &&
-	                    namedKeys != null && typeof namedKeys === STR_OBJECT
-	                ) {
-
-
-	                var typeOfNamedProperty,
-	                    namedPropertyValue,
-
-	                    typeOfSourceProperty,
-	                    propValue
-
-
-	                for(var propName in namedKeys) if (HAS_OWN.call(namedKeys, propName)) {
-
-	                    namedPropertyValue = namedKeys[propName]
-	                    typeOfNamedProperty = typeof namedPropertyValue
-
-	                    propValue = source[propName]
-	                    typeOfSourceProperty = typeof propValue
-
-
-	                    if ( typeOfSourceProperty !== STR_UNDEFINED ) {
-
-	                        destination[
-	                            typeOfNamedProperty == 'string'?
-	                                            namedPropertyValue :
-	                                            propName
-	                            ] = typeOfSourceProperty == 'function' ?
-	                                            propValue.bind(source):
-	                                            propValue
-	                    }
-	                }
-	            }
-
-	            return destination
-	        }
-	    }
-
-	}()
-
-/***/ },
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
-
 	    var setImmediate = function(fn){
 	        setTimeout(fn, 0)
 	    }
@@ -2831,6 +2640,207 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
+/* 7 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = function(){
+
+	    'use strict'
+
+	    var HAS_OWN       = Object.prototype.hasOwnProperty,
+	        STR_OBJECT    = 'object',
+	        STR_UNDEFINED = 'undefined'
+
+	    return {
+
+	        /**
+	         * Copies all properties from source to destination
+	         *
+	         *      copy({name: 'jon',age:5}, this);
+	         *      // => this will have the 'name' and 'age' properties set to 'jon' and 5 respectively
+	         *
+	         * @param {Object} source
+	         * @param {Object} destination
+	         *
+	         * @return {Object} destination
+	         */
+	        copy: __webpack_require__(16),
+
+	        /**
+	         * Copies all properties from source to destination, if the property does not exist into the destination
+	         *
+	         *      copyIf({name: 'jon',age:5}, {age:7})
+	         *      // => { name: 'jon', age: 7}
+	         *
+	         * @param {Object} source
+	         * @param {Object} destination
+	         *
+	         * @return {Object} destination
+	         */
+	        copyIf: __webpack_require__(17),
+
+	        /**
+	         * Copies all properties from source to a new object, with the given value. This object is returned
+	         *
+	         *      copyAs({name: 'jon',age:5})
+	         *      // => the resulting object will have the 'name' and 'age' properties set to 1
+	         *
+	         * @param {Object} source
+	         * @param {Object/Number/String} [value=1]
+	         *
+	         * @return {Object} destination
+	         */
+	        copyAs: function(source, value){
+
+	            var destination = {}
+
+	            value = value || 1
+
+	            if (source != null && typeof source === STR_OBJECT ){
+
+	                for (var i in source) if ( HAS_OWN.call(source, i) ) {
+	                    destination[i] = value
+	                }
+
+	            }
+
+	            return destination
+	        },
+
+	        /**
+	         * Copies all properties named in the list, from source to destination
+	         *
+	         *      copyList({name: 'jon',age:5, year: 2006}, {}, ['name','age'])
+	         *      // => {name: 'jon', age: 5}
+	         *
+	         * @param {Object} source
+	         * @param {Object} destination
+	         * @param {Array} list the array with the names of the properties to copy
+	         *
+	         * @return {Object} destination
+	         */
+	        copyList: __webpack_require__(18),
+
+	        /**
+	         * Copies all properties named in the list, from source to destination, if the property does not exist into the destination
+	         *
+	         *      copyListIf({name: 'jon',age:5, year: 2006}, {age: 10}, ['name','age'])
+	         *      // => {name: 'jon', age: 10}
+	         *
+	         * @param {Object} source
+	         * @param {Object} destination
+	         * @param {Array} list the array with the names of the properties to copy
+	         *
+	         * @return {Object} destination
+	         */
+	        copyListIf: __webpack_require__(19),
+
+	        /**
+	         * Copies all properties named in the namedKeys, from source to destination
+	         *
+	         *      copyKeys({name: 'jon',age:5, year: 2006, date: '2010/05/12'}, {}, {name:1 ,age: true, year: 'theYear'})
+	         *      // => {name: 'jon', age: 5, theYear: 2006}
+	         *
+	         * @param {Object} source
+	         * @param {Object} destination
+	         * @param {Object} namedKeys an object with keys denoting the properties to be copied
+	         *
+	         * @return {Object} destination
+	         */
+	        copyKeys: __webpack_require__(20),
+
+	        /**
+	         * Copies all properties named in the namedKeys, from source to destination,
+	         * but only if the property does not already exist in the destination object
+	         *
+	         *      copyKeysIf({name: 'jon',age:5, year: 2006}, {aname: 'test'}, {name:'aname' ,age: true})
+	         *      // => {aname: 'test', age: 5}
+	         *
+	         * @param {Object} source
+	         * @param {Object} destination
+	         * @param {Object} namedKeys an object with keys denoting the properties to be copied
+	         *
+	         * @return {Object} destination
+	         */
+	        copyKeysIf: __webpack_require__(21),
+
+	        copyExceptKeys: function(source, destination, exceptKeys){
+	            destination = destination || {}
+	            exceptKeys  = exceptKeys  || {}
+
+	            if (source != null && typeof source === STR_OBJECT ){
+
+	                for (var i in source) if ( HAS_OWN.call(source, i) && !HAS_OWN.call(exceptKeys, i) ) {
+
+	                    destination[i] = source[i]
+	                }
+
+	            }
+
+	            return destination
+	        },
+
+	        /**
+	         * Copies the named keys from source to destination.
+	         * For the keys that are functions, copies the functions bound to the source
+	         *
+	         * @param  {Object} source      The source object
+	         * @param  {Object} destination The target object
+	         * @param  {Object} namedKeys   An object with the names of the keys to copy The values from the keys in this object
+	         *                              need to be either numbers or booleans if you want to copy the property under the same name,
+	         *                              or a string if you want to copy the property under a different name
+	         * @return {Object}             Returns the destination object
+	         */
+	        bindCopyKeys: function(source, destination, namedKeys){
+	            if (arguments.length == 2){
+	                namedKeys = destination
+	                destination = null
+	            }
+
+	            destination = destination || {}
+
+	            if (
+	                       source != null && typeof source    === STR_OBJECT &&
+	                    namedKeys != null && typeof namedKeys === STR_OBJECT
+	                ) {
+
+
+	                var typeOfNamedProperty,
+	                    namedPropertyValue,
+
+	                    typeOfSourceProperty,
+	                    propValue
+
+
+	                for(var propName in namedKeys) if (HAS_OWN.call(namedKeys, propName)) {
+
+	                    namedPropertyValue = namedKeys[propName]
+	                    typeOfNamedProperty = typeof namedPropertyValue
+
+	                    propValue = source[propName]
+	                    typeOfSourceProperty = typeof propValue
+
+
+	                    if ( typeOfSourceProperty !== STR_UNDEFINED ) {
+
+	                        destination[
+	                            typeOfNamedProperty == 'string'?
+	                                            namedPropertyValue :
+	                                            propName
+	                            ] = typeOfSourceProperty == 'function' ?
+	                                            propValue.bind(source):
+	                                            propValue
+	                    }
+	                }
+	            }
+
+	            return destination
+	        }
+	    }
+
+	}()
+
+/***/ },
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -2838,10 +2848,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var Region = __webpack_require__(38)
 
-	__webpack_require__(23)
-	__webpack_require__(24)
+	__webpack_require__(12)
+	__webpack_require__(13)
 
-	var COMPUTE_ALIGN_REGION = __webpack_require__(25)
+	var COMPUTE_ALIGN_REGION = __webpack_require__(14)
 
 	/**
 	 * region-align module exposes methods for aligning {@link Element} and {@link Region} instances
@@ -3072,7 +3082,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var hasOwn   = __webpack_require__(12)
+	var hasOwn   = __webpack_require__(15)
 	var VALIDATE = __webpack_require__(10)
 
 	module.exports = function(REGION){
@@ -3291,6 +3301,250 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict'
 
+	var Region = __webpack_require__(38)
+
+	/**
+	 * @static
+	 * Aligns the source region to the target region, so as to correspond to the given alignment.
+	 *
+	 * NOTE that this method makes changes on the sourceRegion in order for it to be aligned as specified.
+	 *
+	 * @param {Region} sourceRegion
+	 * @param {Region} targetRegion
+	 *
+	 * @param {String} align A string with 2 valid align positions, eg: 'tr-bl'.
+	 * For valid positions, see {@link Region#getPoint}
+	 *
+	 * Having 2 regions, we need to be able to align them as we wish:
+	 *
+	 * for example, if we have
+	 *
+	 *       source    target
+	 *       ________________
+	 *       ____
+	 *      |    |     ________
+	 *      |____|    |        |
+	 *                |        |
+	 *                |________|
+	 *
+	 * and we align 't-t', we get:
+	 *
+	 *       source    target
+	 *       _________________
+	 *
+	 *       ____      ________
+	 *      |    |    |        |
+	 *      |____|    |        |
+	 *                |________|
+	 *
+	 *  In this case, the source was moved down to be aligned to the top of the target
+	 *
+	 *
+	 * and if we align 'tc-tc' we get
+	 *
+	 *       source     target
+	 *       __________________
+	 *
+	 *                 ________
+	 *                | |    | |
+	 *                | |____| |
+	 *                |________|
+	 *
+	 *  Since the source was moved to have the top-center point to be the same with target top-center
+	 *
+	 *
+	 *
+	 * @return {RegionClass} The Region class
+	 */
+	Region.align = function(sourceRegion, targetRegion, align){
+
+	    targetRegion = Region.from(targetRegion)
+
+	    align = (align || 'c-c').split('-')
+
+	    //<debug>
+	    if (align.length != 2){
+	        console.warn('Incorrect region alignment! The align parameter need to be in the form \'br-c\', that is, a - separated string!', align)
+	    }
+	    //</debug>
+
+	    return Region.alignToPoint(sourceRegion, targetRegion.getPoint(align[1]), align[0])
+	}
+
+	/**
+	 * Modifies the given region to be aligned to the point, as specified by anchor
+	 *
+	 * @param {Region} region The region to align to the point
+	 * @param {Object} point The point to be used as a reference
+	 * @param {Number} point.x
+	 * @param {Number} point.y
+	 * @param {String} anchor The position where to anchor the region to the point. See {@link #getPoint} for available options/
+	 *
+	 * @return {Region} the given region
+	 */
+	Region.alignToPoint = function(region, point, anchor){
+
+	    region = Region.from(region)
+
+	    var sourcePoint = region.getPoint(anchor)
+	    var count       = 0
+	    var shiftObj    = {}
+
+	    if (
+	            sourcePoint.x != null &&
+	            point.x != null
+	        ){
+
+	            count++
+	            shiftObj.left = point.x - sourcePoint.x
+	    }
+
+	    if (
+	            sourcePoint.y != null &&
+	            point.y != null
+	        ){
+	            count++
+	            shiftObj.top = point.y - sourcePoint.y
+	    }
+
+	    if (count){
+
+	        region.shift(shiftObj)
+
+	    }
+
+	    return region
+	}
+
+/***/ },
+/* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Region = __webpack_require__(38)
+
+	/**
+	 *
+	 * Aligns this region to the given region
+	 * @param {Region} region
+	 * @param {String} alignPositions For available positions, see {@link #getPoint}
+	 *
+	 *     eg: 'tr-bl'
+	 *
+	 * @return this
+	 */
+	Region.prototype.alignToRegion = function(region, alignPositions){
+	    Region.align(this, region, alignPositions)
+
+	    return this
+	}
+
+	/**
+	 * Aligns this region to the given point, in the anchor position
+	 * @param {Object} point eg: {x: 20, y: 600}
+	 * @param {Number} point.x
+	 * @param {Number} point.y
+	 *
+	 * @param {String} anchor For available positions, see {@link #getPoint}
+	 *
+	 *     eg: 'bl'
+	 *
+	 * @return this
+	 */
+	 Region.prototype.alignToPoint = function(point, anchor){
+	    Region.alignToPoint(this, point, anchor)
+
+	    return this
+	}
+
+/***/ },
+/* 14 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict'
+
+	var ALIGN_TO_NORMALIZED = __webpack_require__(39)
+
+	var Region = __webpack_require__(38)
+
+	/**
+	 * @localdoc Given source and target regions, and the given alignments required, returns a region that is the resulting allignment.
+	 * Does not modify the sourceRegion.
+	 *
+	 * Example
+	 *
+	 *      var sourceRegion = zippy.getInstance({
+	 *          alias  : 'z.region',
+	 *          top    : 10,
+	 *          left   : 10,
+	 *          bottom : 40,
+	 *          right  : 100
+	 *      })
+	 *
+	 *      var targetRegion = zippy.getInstance({
+	 *          alias  : 'z.region',
+	 *          top    : 10,
+	 *          left   : 10,
+	 *          bottom : 40,
+	 *          right  : 100
+	 *      })
+	 *      //has top-left at (10,10)
+	 *      //and bottom-right at (40, 100)
+	 *
+	 *      var alignRegion = alignable.COMPUTE_ALIGN_REGION(sourceRegion, targetRegion, 'tl-br')
+	 *
+	 *      //alignRegion will be a clone of sourceRegion, but will have the
+	 *      //top-left corner aligned with bottom-right of targetRegion
+	 *
+	 *      alignRegion.get() // => { top: 40, left: 100, bottom: 70, right: 190 }
+	 *
+	 * @param  {Region} sourceRegion The source region to align to targetRegion
+	 * @param  {Region} targetRegion The target region to which to align the sourceRegion
+	 * @param  {String/String[]} positions    A string ( delimited by "-" characters ) or an array of strings with the position to try, in the order of their priority.
+	 * See Region#getPoint for a list of available positions. They can be combined in any way.
+	 * @param  {Object} config      A config object with other configuration for the alignment
+	 * @param  {Object/Object[]} config.offset      Optional offsets. Either an object or an array with a different offset for each position
+	 * @param  {Element/Region/Boolean} config.constrain  The constrain to region or element. If the boolean true, Region.getDocRegion() will be used
+	 * @param  {Object/Boolean} config.sync   A boolean object that indicates whether to sync sourceRegion and targetRegion sizes (width/height or both). Can be
+	 *
+	 *  * true - in order to sync both width and height
+	 *  * { width: true }  - to only sync width
+	 *  * { height: true } - to only sync height
+	 *  * { size: true }   - to sync both width and height
+	 *
+	 * @return {Object} an object with the following keys:
+	 *
+	 *  * position - the position where the alignment was made. One of the given positions
+	 *  * region   - the region where the alignment is in place
+	 *  * positionChanged - boolean value indicating if the position of the returned region is different from the position of sourceRegion
+	 *  * widthChanged    - boolean value indicating if the width of the returned region is different from the width of sourceRegion
+	 *  * heightChanged   - boolean value indicating if the height of the returned region is different from the height of sourceRegion
+	 */
+	function COMPUTE_ALIGN_REGION(sourceRegion, targetRegion, positions, config){
+	    sourceRegion = Region.from(sourceRegion)
+
+	    var sourceClone = sourceRegion.clone()
+	    var position    = ALIGN_TO_NORMALIZED(sourceClone, targetRegion, positions, config)
+
+	    return {
+	        position        : position,
+	        region          : sourceClone,
+	        widthChanged    : sourceClone.getWidth() != sourceRegion.getWidth(),
+	        heightChanged   : sourceClone.getHeight() != sourceRegion.getHeight(),
+	        positionChanged : sourceClone.equalsPosition(sourceRegion)
+	    }
+	}
+
+
+	module.exports = COMPUTE_ALIGN_REGION
+
+/***/ },
+/* 15 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict'
+
 	var hasOwn = Object.prototype.hasOwnProperty
 
 	function curry(fn, n){
@@ -3329,23 +3583,500 @@ return /******/ (function(modules) { // webpackBootstrap
 	})
 
 /***/ },
-/* 13 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getInstantiatorFunction = __webpack_require__(39)
+	'use strict'
+
+	var HAS_OWN       = Object.prototype.hasOwnProperty
+	var STR_OBJECT    = 'object'
+
+	/**
+	 * Copies all properties from source to destination
+	 *
+	 *      copy({name: 'jon',age:5}, this);
+	 *      // => this will have the 'name' and 'age' properties set to 'jon' and 5 respectively
+	 *
+	 * @param {Object} source
+	 * @param {Object} destination
+	 *
+	 * @return {Object} destination
+	 */
+	module.exports = function(source, destination){
+
+	    destination = destination || {}
+
+	    if (source != null && typeof source === STR_OBJECT ){
+
+	        for (var i in source) if ( HAS_OWN.call(source, i) ) {
+	            destination[i] = source[i]
+	        }
+
+	    }
+
+	    return destination
+	}
+
+/***/ },
+/* 17 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict'
+
+	var HAS_OWN       = Object.prototype.hasOwnProperty
+	var STR_OBJECT    = 'object'
+	var STR_UNDEFINED = 'undefined'
+
+	/**
+	 * Copies all properties from source to destination, if the property does not exist into the destination
+	 *
+	 *      copyIf({name: 'jon',age:5}, {age:7})
+	 *      // => { name: 'jon', age: 7}
+	 *
+	 * @param {Object} source
+	 * @param {Object} destination
+	 *
+	 * @return {Object} destination
+	 */
+	module.exports = function(source, destination){
+	    destination = destination || {}
+
+	    if (source != null && typeof source === STR_OBJECT){
+
+	        for (var i in source) if ( HAS_OWN.call(source, i) && (typeof destination[i] === STR_UNDEFINED) ) {
+
+	            destination[i] = source[i]
+
+	        }
+	    }
+
+	    return destination
+	}
+
+/***/ },
+/* 18 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict'
+
+	var STR_UNDEFINED = 'undefined'
+
+	/**
+	 * Copies all properties named in the list, from source to destination
+	 *
+	 *      copyList({name: 'jon',age:5, year: 2006}, {}, ['name','age'])
+	 *      // => {name: 'jon', age: 5}
+	 *
+	 * @param {Object} source
+	 * @param {Object} destination
+	 * @param {Array} list the array with the names of the properties to copy
+	 *
+	 * @return {Object} destination
+	 */
+	module.exports = function(source, destination, list){
+	    if (arguments.length < 3){
+	        list = destination
+	        destination = null
+	    }
+
+	    destination = destination || {}
+	    list        = list || Object.keys(source)
+
+	    var i   = 0
+	    var len = list.length
+	    var propName
+
+	    for ( ; i < len; i++ ){
+	        propName = list[i]
+
+	        if ( typeof source[propName] !== STR_UNDEFINED ) {
+	            destination[list[i]] = source[list[i]]
+	        }
+	    }
+
+	    return destination
+	}
+
+/***/ },
+/* 19 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict'
+
+	var STR_UNDEFINED = 'undefined'
+
+	/**
+	 * Copies all properties named in the list, from source to destination, if the property does not exist into the destination
+	 *
+	 *      copyListIf({name: 'jon',age:5, year: 2006}, {age: 10}, ['name','age'])
+	 *      // => {name: 'jon', age: 10}
+	 *
+	 * @param {Object} source
+	 * @param {Object} destination
+	 * @param {Array} list the array with the names of the properties to copy
+	 *
+	 * @return {Object} destination
+	 */
+	module.exports = function(source, destination, list){
+	    if (arguments.length < 3){
+	        list = destination
+	        destination = null
+	    }
+
+	    destination = destination || {}
+	    list        = list || Object.keys(source)
+
+	    var i   = 0
+	    var len = list.length
+	    var propName
+
+	    for ( ; i < len ; i++ ){
+	        propName = list[i]
+	        if (
+	                (typeof source[propName]      !== STR_UNDEFINED) &&
+	                (typeof destination[propName] === STR_UNDEFINED)
+	            ){
+	            destination[propName] = source[propName]
+	        }
+	    }
+
+	    return destination
+	}
+
+/***/ },
+/* 20 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict'
+
+	var STR_UNDEFINED = 'undefined'
+	var STR_OBJECT    = 'object'
+	var HAS_OWN       = Object.prototype.hasOwnProperty
+
+	var copyList = __webpack_require__(18)
+
+	/**
+	 * Copies all properties named in the namedKeys, from source to destination
+	 *
+	 *      copyKeys({name: 'jon',age:5, year: 2006, date: '2010/05/12'}, {}, {name:1 ,age: true, year: 'theYear'})
+	 *      // => {name: 'jon', age: 5, theYear: 2006}
+	 *
+	 * @param {Object} source
+	 * @param {Object} destination
+	 * @param {Object} namedKeys an object with keys denoting the properties to be copied
+	 *
+	 * @return {Object} destination
+	 */
+	module.exports = function(source, destination, namedKeys){
+	    if (arguments.length < 3 ){
+	        namedKeys = destination
+	        destination = null
+	    }
+
+	    destination = destination || {}
+
+	    if (!namedKeys || Array.isArray(namedKeys)){
+	        return copyList(source, destination, namedKeys)
+	    }
+
+	    if (
+	           source != null && typeof source    === STR_OBJECT &&
+	        namedKeys != null && typeof namedKeys === STR_OBJECT
+	    ) {
+	        var typeOfNamedProperty
+	        var namedPropertyValue
+
+	        for  (var propName in namedKeys) if ( HAS_OWN.call(namedKeys, propName) ) {
+	            namedPropertyValue  = namedKeys[propName]
+	            typeOfNamedProperty = typeof namedPropertyValue
+
+	            if (typeof source[propName] !== STR_UNDEFINED){
+	                destination[typeOfNamedProperty == 'string'? namedPropertyValue : propName] = source[propName]
+	            }
+	        }
+	    }
+
+	    return destination
+	}
+
+/***/ },
+/* 21 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict'
+
+	var STR_UNDEFINED = 'undefined'
+	var STR_OBJECT    = 'object'
+	var HAS_OWN       = Object.prototype.hasOwnProperty
+
+	var copyListIf = __webpack_require__(19)
+
+	/**
+	 * Copies all properties named in the namedKeys, from source to destination,
+	 * but only if the property does not already exist in the destination object
+	 *
+	 *      copyKeysIf({name: 'jon',age:5, year: 2006}, {aname: 'test'}, {name:'aname' ,age: true})
+	 *      // => {aname: 'test', age: 5}
+	 *
+	 * @param {Object} source
+	 * @param {Object} destination
+	 * @param {Object} namedKeys an object with keys denoting the properties to be copied
+	 *
+	 * @return {Object} destination
+	 */
+	module.exports = function(source, destination, namedKeys){
+	    if (arguments.length < 3 ){
+	        namedKeys = destination
+	        destination = null
+	    }
+
+	    destination = destination || {}
+
+	    if (!namedKeys || Array.isArray(namedKeys)){
+	        return copyListIf(source, destination, namedKeys)
+	    }
+
+	    if (
+	               source != null && typeof source    === STR_OBJECT &&
+	            namedKeys != null && typeof namedKeys === STR_OBJECT
+	        ) {
+
+	            var typeOfNamedProperty
+	            var namedPropertyValue
+	            var newPropertyName
+
+	            for (var propName in namedKeys) if ( HAS_OWN.call(namedKeys, propName) ) {
+
+	                namedPropertyValue  = namedKeys[propName]
+	                typeOfNamedProperty = typeof namedPropertyValue
+	                newPropertyName     = typeOfNamedProperty == 'string'? namedPropertyValue : propName
+
+	                if (
+	                        typeof      source[propName]        !== STR_UNDEFINED &&
+	                        typeof destination[newPropertyName] === STR_UNDEFINED
+	                    ) {
+	                    destination[newPropertyName] = source[propName]
+	                }
+
+	            }
+	        }
+
+	    return destination
+	}
+
+/***/ },
+/* 22 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var getInstantiatorFunction = __webpack_require__(46)
 
 	module.exports = function(fn, args){
 		return getInstantiatorFunction(args.length)(fn, args)
 	}
 
 /***/ },
-/* 14 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(47)
+	module.exports = function(){
+
+	    'use strict'
+
+	    var HAS_OWN       = Object.prototype.hasOwnProperty,
+	        STR_OBJECT    = 'object',
+	        STR_UNDEFINED = 'undefined'
+
+	    return {
+
+	        /**
+	         * Copies all properties from source to destination
+	         *
+	         *      copy({name: 'jon',age:5}, this);
+	         *      // => this will have the 'name' and 'age' properties set to 'jon' and 5 respectively
+	         *
+	         * @param {Object} source
+	         * @param {Object} destination
+	         *
+	         * @return {Object} destination
+	         */
+	        copy: __webpack_require__(40),
+
+	        /**
+	         * Copies all properties from source to destination, if the property does not exist into the destination
+	         *
+	         *      copyIf({name: 'jon',age:5}, {age:7})
+	         *      // => { name: 'jon', age: 7}
+	         *
+	         * @param {Object} source
+	         * @param {Object} destination
+	         *
+	         * @return {Object} destination
+	         */
+	        copyIf: __webpack_require__(41),
+
+	        /**
+	         * Copies all properties from source to a new object, with the given value. This object is returned
+	         *
+	         *      copyAs({name: 'jon',age:5})
+	         *      // => the resulting object will have the 'name' and 'age' properties set to 1
+	         *
+	         * @param {Object} source
+	         * @param {Object/Number/String} [value=1]
+	         *
+	         * @return {Object} destination
+	         */
+	        copyAs: function(source, value){
+
+	            var destination = {}
+
+	            value = value || 1
+
+	            if (source != null && typeof source === STR_OBJECT ){
+
+	                for (var i in source) if ( HAS_OWN.call(source, i) ) {
+	                    destination[i] = value
+	                }
+
+	            }
+
+	            return destination
+	        },
+
+	        /**
+	         * Copies all properties named in the list, from source to destination
+	         *
+	         *      copyList({name: 'jon',age:5, year: 2006}, {}, ['name','age'])
+	         *      // => {name: 'jon', age: 5}
+	         *
+	         * @param {Object} source
+	         * @param {Object} destination
+	         * @param {Array} list the array with the names of the properties to copy
+	         *
+	         * @return {Object} destination
+	         */
+	        copyList: __webpack_require__(42),
+
+	        /**
+	         * Copies all properties named in the list, from source to destination, if the property does not exist into the destination
+	         *
+	         *      copyListIf({name: 'jon',age:5, year: 2006}, {age: 10}, ['name','age'])
+	         *      // => {name: 'jon', age: 10}
+	         *
+	         * @param {Object} source
+	         * @param {Object} destination
+	         * @param {Array} list the array with the names of the properties to copy
+	         *
+	         * @return {Object} destination
+	         */
+	        copyListIf: __webpack_require__(43),
+
+	        /**
+	         * Copies all properties named in the namedKeys, from source to destination
+	         *
+	         *      copyKeys({name: 'jon',age:5, year: 2006, date: '2010/05/12'}, {}, {name:1 ,age: true, year: 'theYear'})
+	         *      // => {name: 'jon', age: 5, theYear: 2006}
+	         *
+	         * @param {Object} source
+	         * @param {Object} destination
+	         * @param {Object} namedKeys an object with keys denoting the properties to be copied
+	         *
+	         * @return {Object} destination
+	         */
+	        copyKeys: __webpack_require__(44),
+
+	        /**
+	         * Copies all properties named in the namedKeys, from source to destination,
+	         * but only if the property does not already exist in the destination object
+	         *
+	         *      copyKeysIf({name: 'jon',age:5, year: 2006}, {aname: 'test'}, {name:'aname' ,age: true})
+	         *      // => {aname: 'test', age: 5}
+	         *
+	         * @param {Object} source
+	         * @param {Object} destination
+	         * @param {Object} namedKeys an object with keys denoting the properties to be copied
+	         *
+	         * @return {Object} destination
+	         */
+	        copyKeysIf: __webpack_require__(45),
+
+	        copyExceptKeys: function(source, destination, exceptKeys){
+	            destination = destination || {}
+	            exceptKeys  = exceptKeys  || {}
+
+	            if (source != null && typeof source === STR_OBJECT ){
+
+	                for (var i in source) if ( HAS_OWN.call(source, i) && !HAS_OWN.call(exceptKeys, i) ) {
+
+	                    destination[i] = source[i]
+	                }
+
+	            }
+
+	            return destination
+	        },
+
+	        /**
+	         * Copies the named keys from source to destination.
+	         * For the keys that are functions, copies the functions bound to the source
+	         *
+	         * @param  {Object} source      The source object
+	         * @param  {Object} destination The target object
+	         * @param  {Object} namedKeys   An object with the names of the keys to copy The values from the keys in this object
+	         *                              need to be either numbers or booleans if you want to copy the property under the same name,
+	         *                              or a string if you want to copy the property under a different name
+	         * @return {Object}             Returns the destination object
+	         */
+	        bindCopyKeys: function(source, destination, namedKeys){
+	            if (arguments.length == 2){
+	                namedKeys = destination
+	                destination = null
+	            }
+
+	            destination = destination || {}
+
+	            if (
+	                       source != null && typeof source    === STR_OBJECT &&
+	                    namedKeys != null && typeof namedKeys === STR_OBJECT
+	                ) {
+
+
+	                var typeOfNamedProperty,
+	                    namedPropertyValue,
+
+	                    typeOfSourceProperty,
+	                    propValue
+
+
+	                for(var propName in namedKeys) if (HAS_OWN.call(namedKeys, propName)) {
+
+	                    namedPropertyValue = namedKeys[propName]
+	                    typeOfNamedProperty = typeof namedPropertyValue
+
+	                    propValue = source[propName]
+	                    typeOfSourceProperty = typeof propValue
+
+
+	                    if ( typeOfSourceProperty !== STR_UNDEFINED ) {
+
+	                        destination[
+	                            typeOfNamedProperty == 'string'?
+	                                            namedPropertyValue :
+	                                            propName
+	                            ] = typeOfSourceProperty == 'function' ?
+	                                            propValue.bind(source):
+	                                            propValue
+	                    }
+	                }
+	            }
+
+	            return destination
+	        }
+	    }
+
+	}()
 
 /***/ },
-/* 15 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -3652,731 +4383,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 16 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = function(){
-
-	    'use strict'
-
-	    var HAS_OWN       = Object.prototype.hasOwnProperty,
-	        STR_OBJECT    = 'object',
-	        STR_UNDEFINED = 'undefined'
-
-	    return {
-
-	        /**
-	         * Copies all properties from source to destination
-	         *
-	         *      copy({name: 'jon',age:5}, this);
-	         *      // => this will have the 'name' and 'age' properties set to 'jon' and 5 respectively
-	         *
-	         * @param {Object} source
-	         * @param {Object} destination
-	         *
-	         * @return {Object} destination
-	         */
-	        copy: __webpack_require__(41),
-
-	        /**
-	         * Copies all properties from source to destination, if the property does not exist into the destination
-	         *
-	         *      copyIf({name: 'jon',age:5}, {age:7})
-	         *      // => { name: 'jon', age: 7}
-	         *
-	         * @param {Object} source
-	         * @param {Object} destination
-	         *
-	         * @return {Object} destination
-	         */
-	        copyIf: __webpack_require__(42),
-
-	        /**
-	         * Copies all properties from source to a new object, with the given value. This object is returned
-	         *
-	         *      copyAs({name: 'jon',age:5})
-	         *      // => the resulting object will have the 'name' and 'age' properties set to 1
-	         *
-	         * @param {Object} source
-	         * @param {Object/Number/String} [value=1]
-	         *
-	         * @return {Object} destination
-	         */
-	        copyAs: function(source, value){
-
-	            var destination = {}
-
-	            value = value || 1
-
-	            if (source != null && typeof source === STR_OBJECT ){
-
-	                for (var i in source) if ( HAS_OWN.call(source, i) ) {
-	                    destination[i] = value
-	                }
-
-	            }
-
-	            return destination
-	        },
-
-	        /**
-	         * Copies all properties named in the list, from source to destination
-	         *
-	         *      copyList({name: 'jon',age:5, year: 2006}, {}, ['name','age'])
-	         *      // => {name: 'jon', age: 5}
-	         *
-	         * @param {Object} source
-	         * @param {Object} destination
-	         * @param {Array} list the array with the names of the properties to copy
-	         *
-	         * @return {Object} destination
-	         */
-	        copyList: __webpack_require__(43),
-
-	        /**
-	         * Copies all properties named in the list, from source to destination, if the property does not exist into the destination
-	         *
-	         *      copyListIf({name: 'jon',age:5, year: 2006}, {age: 10}, ['name','age'])
-	         *      // => {name: 'jon', age: 10}
-	         *
-	         * @param {Object} source
-	         * @param {Object} destination
-	         * @param {Array} list the array with the names of the properties to copy
-	         *
-	         * @return {Object} destination
-	         */
-	        copyListIf: __webpack_require__(44),
-
-	        /**
-	         * Copies all properties named in the namedKeys, from source to destination
-	         *
-	         *      copyKeys({name: 'jon',age:5, year: 2006, date: '2010/05/12'}, {}, {name:1 ,age: true, year: 'theYear'})
-	         *      // => {name: 'jon', age: 5, theYear: 2006}
-	         *
-	         * @param {Object} source
-	         * @param {Object} destination
-	         * @param {Object} namedKeys an object with keys denoting the properties to be copied
-	         *
-	         * @return {Object} destination
-	         */
-	        copyKeys: __webpack_require__(45),
-
-	        /**
-	         * Copies all properties named in the namedKeys, from source to destination,
-	         * but only if the property does not already exist in the destination object
-	         *
-	         *      copyKeysIf({name: 'jon',age:5, year: 2006}, {aname: 'test'}, {name:'aname' ,age: true})
-	         *      // => {aname: 'test', age: 5}
-	         *
-	         * @param {Object} source
-	         * @param {Object} destination
-	         * @param {Object} namedKeys an object with keys denoting the properties to be copied
-	         *
-	         * @return {Object} destination
-	         */
-	        copyKeysIf: __webpack_require__(46),
-
-	        copyExceptKeys: function(source, destination, exceptKeys){
-	            destination = destination || {}
-	            exceptKeys  = exceptKeys  || {}
-
-	            if (source != null && typeof source === STR_OBJECT ){
-
-	                for (var i in source) if ( HAS_OWN.call(source, i) && !HAS_OWN.call(exceptKeys, i) ) {
-
-	                    destination[i] = source[i]
-	                }
-
-	            }
-
-	            return destination
-	        },
-
-	        /**
-	         * Copies the named keys from source to destination.
-	         * For the keys that are functions, copies the functions bound to the source
-	         *
-	         * @param  {Object} source      The source object
-	         * @param  {Object} destination The target object
-	         * @param  {Object} namedKeys   An object with the names of the keys to copy The values from the keys in this object
-	         *                              need to be either numbers or booleans if you want to copy the property under the same name,
-	         *                              or a string if you want to copy the property under a different name
-	         * @return {Object}             Returns the destination object
-	         */
-	        bindCopyKeys: function(source, destination, namedKeys){
-	            if (arguments.length == 2){
-	                namedKeys = destination
-	                destination = null
-	            }
-
-	            destination = destination || {}
-
-	            if (
-	                       source != null && typeof source    === STR_OBJECT &&
-	                    namedKeys != null && typeof namedKeys === STR_OBJECT
-	                ) {
-
-
-	                var typeOfNamedProperty,
-	                    namedPropertyValue,
-
-	                    typeOfSourceProperty,
-	                    propValue
-
-
-	                for(var propName in namedKeys) if (HAS_OWN.call(namedKeys, propName)) {
-
-	                    namedPropertyValue = namedKeys[propName]
-	                    typeOfNamedProperty = typeof namedPropertyValue
-
-	                    propValue = source[propName]
-	                    typeOfSourceProperty = typeof propValue
-
-
-	                    if ( typeOfSourceProperty !== STR_UNDEFINED ) {
-
-	                        destination[
-	                            typeOfNamedProperty == 'string'?
-	                                            namedPropertyValue :
-	                                            propName
-	                            ] = typeOfSourceProperty == 'function' ?
-	                                            propValue.bind(source):
-	                                            propValue
-	                    }
-	                }
-	            }
-
-	            return destination
-	        }
-	    }
-
-	}()
-
-/***/ },
-/* 17 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict'
-
-	var HAS_OWN       = Object.prototype.hasOwnProperty
-	var STR_OBJECT    = 'object'
-
-	/**
-	 * Copies all properties from source to destination
-	 *
-	 *      copy({name: 'jon',age:5}, this);
-	 *      // => this will have the 'name' and 'age' properties set to 'jon' and 5 respectively
-	 *
-	 * @param {Object} source
-	 * @param {Object} destination
-	 *
-	 * @return {Object} destination
-	 */
-	module.exports = function(source, destination){
-
-	    destination = destination || {}
-
-	    if (source != null && typeof source === STR_OBJECT ){
-
-	        for (var i in source) if ( HAS_OWN.call(source, i) ) {
-	            destination[i] = source[i]
-	        }
-
-	    }
-
-	    return destination
-	}
-
-/***/ },
-/* 18 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict'
-
-	var HAS_OWN       = Object.prototype.hasOwnProperty
-	var STR_OBJECT    = 'object'
-	var STR_UNDEFINED = 'undefined'
-
-	/**
-	 * Copies all properties from source to destination, if the property does not exist into the destination
-	 *
-	 *      copyIf({name: 'jon',age:5}, {age:7})
-	 *      // => { name: 'jon', age: 7}
-	 *
-	 * @param {Object} source
-	 * @param {Object} destination
-	 *
-	 * @return {Object} destination
-	 */
-	module.exports = function(source, destination){
-	    destination = destination || {}
-
-	    if (source != null && typeof source === STR_OBJECT){
-
-	        for (var i in source) if ( HAS_OWN.call(source, i) && (typeof destination[i] === STR_UNDEFINED) ) {
-
-	            destination[i] = source[i]
-
-	        }
-	    }
-
-	    return destination
-	}
-
-/***/ },
-/* 19 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict'
-
-	var STR_UNDEFINED = 'undefined'
-
-	/**
-	 * Copies all properties named in the list, from source to destination
-	 *
-	 *      copyList({name: 'jon',age:5, year: 2006}, {}, ['name','age'])
-	 *      // => {name: 'jon', age: 5}
-	 *
-	 * @param {Object} source
-	 * @param {Object} destination
-	 * @param {Array} list the array with the names of the properties to copy
-	 *
-	 * @return {Object} destination
-	 */
-	module.exports = function(source, destination, list){
-	    if (arguments.length < 3){
-	        list = destination
-	        destination = null
-	    }
-
-	    destination = destination || {}
-	    list        = list || Object.keys(source)
-
-	    var i   = 0
-	    var len = list.length
-	    var propName
-
-	    for ( ; i < len; i++ ){
-	        propName = list[i]
-
-	        if ( typeof source[propName] !== STR_UNDEFINED ) {
-	            destination[list[i]] = source[list[i]]
-	        }
-	    }
-
-	    return destination
-	}
-
-/***/ },
-/* 20 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict'
-
-	var STR_UNDEFINED = 'undefined'
-
-	/**
-	 * Copies all properties named in the list, from source to destination, if the property does not exist into the destination
-	 *
-	 *      copyListIf({name: 'jon',age:5, year: 2006}, {age: 10}, ['name','age'])
-	 *      // => {name: 'jon', age: 10}
-	 *
-	 * @param {Object} source
-	 * @param {Object} destination
-	 * @param {Array} list the array with the names of the properties to copy
-	 *
-	 * @return {Object} destination
-	 */
-	module.exports = function(source, destination, list){
-	    if (arguments.length < 3){
-	        list = destination
-	        destination = null
-	    }
-
-	    destination = destination || {}
-	    list        = list || Object.keys(source)
-
-	    var i   = 0
-	    var len = list.length
-	    var propName
-
-	    for ( ; i < len ; i++ ){
-	        propName = list[i]
-	        if (
-	                (typeof source[propName]      !== STR_UNDEFINED) &&
-	                (typeof destination[propName] === STR_UNDEFINED)
-	            ){
-	            destination[propName] = source[propName]
-	        }
-	    }
-
-	    return destination
-	}
-
-/***/ },
-/* 21 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict'
-
-	var STR_UNDEFINED = 'undefined'
-	var STR_OBJECT    = 'object'
-	var HAS_OWN       = Object.prototype.hasOwnProperty
-
-	var copyList = __webpack_require__(19)
-
-	/**
-	 * Copies all properties named in the namedKeys, from source to destination
-	 *
-	 *      copyKeys({name: 'jon',age:5, year: 2006, date: '2010/05/12'}, {}, {name:1 ,age: true, year: 'theYear'})
-	 *      // => {name: 'jon', age: 5, theYear: 2006}
-	 *
-	 * @param {Object} source
-	 * @param {Object} destination
-	 * @param {Object} namedKeys an object with keys denoting the properties to be copied
-	 *
-	 * @return {Object} destination
-	 */
-	module.exports = function(source, destination, namedKeys){
-	    if (arguments.length < 3 ){
-	        namedKeys = destination
-	        destination = null
-	    }
-
-	    destination = destination || {}
-
-	    if (!namedKeys || Array.isArray(namedKeys)){
-	        return copyList(source, destination, namedKeys)
-	    }
-
-	    if (
-	           source != null && typeof source    === STR_OBJECT &&
-	        namedKeys != null && typeof namedKeys === STR_OBJECT
-	    ) {
-	        var typeOfNamedProperty
-	        var namedPropertyValue
-
-	        for  (var propName in namedKeys) if ( HAS_OWN.call(namedKeys, propName) ) {
-	            namedPropertyValue  = namedKeys[propName]
-	            typeOfNamedProperty = typeof namedPropertyValue
-
-	            if (typeof source[propName] !== STR_UNDEFINED){
-	                destination[typeOfNamedProperty == 'string'? namedPropertyValue : propName] = source[propName]
-	            }
-	        }
-	    }
-
-	    return destination
-	}
-
-/***/ },
-/* 22 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict'
-
-	var STR_UNDEFINED = 'undefined'
-	var STR_OBJECT    = 'object'
-	var HAS_OWN       = Object.prototype.hasOwnProperty
-
-	var copyListIf = __webpack_require__(20)
-
-	/**
-	 * Copies all properties named in the namedKeys, from source to destination,
-	 * but only if the property does not already exist in the destination object
-	 *
-	 *      copyKeysIf({name: 'jon',age:5, year: 2006}, {aname: 'test'}, {name:'aname' ,age: true})
-	 *      // => {aname: 'test', age: 5}
-	 *
-	 * @param {Object} source
-	 * @param {Object} destination
-	 * @param {Object} namedKeys an object with keys denoting the properties to be copied
-	 *
-	 * @return {Object} destination
-	 */
-	module.exports = function(source, destination, namedKeys){
-	    if (arguments.length < 3 ){
-	        namedKeys = destination
-	        destination = null
-	    }
-
-	    destination = destination || {}
-
-	    if (!namedKeys || Array.isArray(namedKeys)){
-	        return copyListIf(source, destination, namedKeys)
-	    }
-
-	    if (
-	               source != null && typeof source    === STR_OBJECT &&
-	            namedKeys != null && typeof namedKeys === STR_OBJECT
-	        ) {
-
-	            var typeOfNamedProperty
-	            var namedPropertyValue
-	            var newPropertyName
-
-	            for (var propName in namedKeys) if ( HAS_OWN.call(namedKeys, propName) ) {
-
-	                namedPropertyValue  = namedKeys[propName]
-	                typeOfNamedProperty = typeof namedPropertyValue
-	                newPropertyName     = typeOfNamedProperty == 'string'? namedPropertyValue : propName
-
-	                if (
-	                        typeof      source[propName]        !== STR_UNDEFINED &&
-	                        typeof destination[newPropertyName] === STR_UNDEFINED
-	                    ) {
-	                    destination[newPropertyName] = source[propName]
-	                }
-
-	            }
-	        }
-
-	    return destination
-	}
-
-/***/ },
-/* 23 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict'
-
-	var Region = __webpack_require__(38)
-
-	/**
-	 * @static
-	 * Aligns the source region to the target region, so as to correspond to the given alignment.
-	 *
-	 * NOTE that this method makes changes on the sourceRegion in order for it to be aligned as specified.
-	 *
-	 * @param {Region} sourceRegion
-	 * @param {Region} targetRegion
-	 *
-	 * @param {String} align A string with 2 valid align positions, eg: 'tr-bl'.
-	 * For valid positions, see {@link Region#getPoint}
-	 *
-	 * Having 2 regions, we need to be able to align them as we wish:
-	 *
-	 * for example, if we have
-	 *
-	 *       source    target
-	 *       ________________
-	 *       ____
-	 *      |    |     ________
-	 *      |____|    |        |
-	 *                |        |
-	 *                |________|
-	 *
-	 * and we align 't-t', we get:
-	 *
-	 *       source    target
-	 *       _________________
-	 *
-	 *       ____      ________
-	 *      |    |    |        |
-	 *      |____|    |        |
-	 *                |________|
-	 *
-	 *  In this case, the source was moved down to be aligned to the top of the target
-	 *
-	 *
-	 * and if we align 'tc-tc' we get
-	 *
-	 *       source     target
-	 *       __________________
-	 *
-	 *                 ________
-	 *                | |    | |
-	 *                | |____| |
-	 *                |________|
-	 *
-	 *  Since the source was moved to have the top-center point to be the same with target top-center
-	 *
-	 *
-	 *
-	 * @return {RegionClass} The Region class
-	 */
-	Region.align = function(sourceRegion, targetRegion, align){
-
-	    targetRegion = Region.from(targetRegion)
-
-	    align = (align || 'c-c').split('-')
-
-	    //<debug>
-	    if (align.length != 2){
-	        console.warn('Incorrect region alignment! The align parameter need to be in the form \'br-c\', that is, a - separated string!', align)
-	    }
-	    //</debug>
-
-	    return Region.alignToPoint(sourceRegion, targetRegion.getPoint(align[1]), align[0])
-	}
-
-	/**
-	 * Modifies the given region to be aligned to the point, as specified by anchor
-	 *
-	 * @param {Region} region The region to align to the point
-	 * @param {Object} point The point to be used as a reference
-	 * @param {Number} point.x
-	 * @param {Number} point.y
-	 * @param {String} anchor The position where to anchor the region to the point. See {@link #getPoint} for available options/
-	 *
-	 * @return {Region} the given region
-	 */
-	Region.alignToPoint = function(region, point, anchor){
-
-	    region = Region.from(region)
-
-	    var sourcePoint = region.getPoint(anchor)
-	    var count       = 0
-	    var shiftObj    = {}
-
-	    if (
-	            sourcePoint.x != null &&
-	            point.x != null
-	        ){
-
-	            count++
-	            shiftObj.left = point.x - sourcePoint.x
-	    }
-
-	    if (
-	            sourcePoint.y != null &&
-	            point.y != null
-	        ){
-	            count++
-	            shiftObj.top = point.y - sourcePoint.y
-	    }
-
-	    if (count){
-
-	        region.shift(shiftObj)
-
-	    }
-
-	    return region
-	}
-
-/***/ },
-/* 24 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var Region = __webpack_require__(38)
-
-	/**
-	 *
-	 * Aligns this region to the given region
-	 * @param {Region} region
-	 * @param {String} alignPositions For available positions, see {@link #getPoint}
-	 *
-	 *     eg: 'tr-bl'
-	 *
-	 * @return this
-	 */
-	Region.prototype.alignToRegion = function(region, alignPositions){
-	    Region.align(this, region, alignPositions)
-
-	    return this
-	}
-
-	/**
-	 * Aligns this region to the given point, in the anchor position
-	 * @param {Object} point eg: {x: 20, y: 600}
-	 * @param {Number} point.x
-	 * @param {Number} point.y
-	 *
-	 * @param {String} anchor For available positions, see {@link #getPoint}
-	 *
-	 *     eg: 'bl'
-	 *
-	 * @return this
-	 */
-	 Region.prototype.alignToPoint = function(point, anchor){
-	    Region.alignToPoint(this, point, anchor)
-
-	    return this
-	}
-
-/***/ },
 /* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict'
-
-	var ALIGN_TO_NORMALIZED = __webpack_require__(40)
-
-	var Region = __webpack_require__(38)
-
-	/**
-	 * @localdoc Given source and target regions, and the given alignments required, returns a region that is the resulting allignment.
-	 * Does not modify the sourceRegion.
-	 *
-	 * Example
-	 *
-	 *      var sourceRegion = zippy.getInstance({
-	 *          alias  : 'z.region',
-	 *          top    : 10,
-	 *          left   : 10,
-	 *          bottom : 40,
-	 *          right  : 100
-	 *      })
-	 *
-	 *      var targetRegion = zippy.getInstance({
-	 *          alias  : 'z.region',
-	 *          top    : 10,
-	 *          left   : 10,
-	 *          bottom : 40,
-	 *          right  : 100
-	 *      })
-	 *      //has top-left at (10,10)
-	 *      //and bottom-right at (40, 100)
-	 *
-	 *      var alignRegion = alignable.COMPUTE_ALIGN_REGION(sourceRegion, targetRegion, 'tl-br')
-	 *
-	 *      //alignRegion will be a clone of sourceRegion, but will have the
-	 *      //top-left corner aligned with bottom-right of targetRegion
-	 *
-	 *      alignRegion.get() // => { top: 40, left: 100, bottom: 70, right: 190 }
-	 *
-	 * @param  {Region} sourceRegion The source region to align to targetRegion
-	 * @param  {Region} targetRegion The target region to which to align the sourceRegion
-	 * @param  {String/String[]} positions    A string ( delimited by "-" characters ) or an array of strings with the position to try, in the order of their priority.
-	 * See Region#getPoint for a list of available positions. They can be combined in any way.
-	 * @param  {Object} config      A config object with other configuration for the alignment
-	 * @param  {Object/Object[]} config.offset      Optional offsets. Either an object or an array with a different offset for each position
-	 * @param  {Element/Region/Boolean} config.constrain  The constrain to region or element. If the boolean true, Region.getDocRegion() will be used
-	 * @param  {Object/Boolean} config.sync   A boolean object that indicates whether to sync sourceRegion and targetRegion sizes (width/height or both). Can be
-	 *
-	 *  * true - in order to sync both width and height
-	 *  * { width: true }  - to only sync width
-	 *  * { height: true } - to only sync height
-	 *  * { size: true }   - to sync both width and height
-	 *
-	 * @return {Object} an object with the following keys:
-	 *
-	 *  * position - the position where the alignment was made. One of the given positions
-	 *  * region   - the region where the alignment is in place
-	 *  * positionChanged - boolean value indicating if the position of the returned region is different from the position of sourceRegion
-	 *  * widthChanged    - boolean value indicating if the width of the returned region is different from the width of sourceRegion
-	 *  * heightChanged   - boolean value indicating if the height of the returned region is different from the height of sourceRegion
-	 */
-	function COMPUTE_ALIGN_REGION(sourceRegion, targetRegion, positions, config){
-	    sourceRegion = Region.from(sourceRegion)
-
-	    var sourceClone = sourceRegion.clone()
-	    var position    = ALIGN_TO_NORMALIZED(sourceClone, targetRegion, positions, config)
-
-	    return {
-	        position        : position,
-	        region          : sourceClone,
-	        widthChanged    : sourceClone.getWidth() != sourceRegion.getWidth(),
-	        heightChanged   : sourceClone.getHeight() != sourceRegion.getHeight(),
-	        positionChanged : sourceClone.equalsPosition(sourceRegion)
-	    }
-	}
-
-
-	module.exports = COMPUTE_ALIGN_REGION
+	module.exports = __webpack_require__(47)
 
 /***/ },
 /* 26 */
@@ -4625,39 +4635,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = function(){
-
-	    'use strict';
-
-	    var fns = {}
-
-	    return function(len){
-
-	        if ( ! fns [len ] ) {
-
-	            var args = []
-	            var i    = 0
-
-	            for (; i < len; i++ ) {
-	                args.push( 'a[' + i + ']')
-	            }
-
-	            fns[len] = new Function(
-	                            'c',
-	                            'a',
-	                            'return new c(' + args.join(',') + ')'
-	                        )
-	        }
-
-	        return fns[len]
-	    }
-
-	}()
-
-/***/ },
-/* 40 */
-/***/ function(module, exports, __webpack_require__) {
-
 	'use strict'
 
 	var Region = __webpack_require__(38)
@@ -4837,7 +4814,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = ALIGN_TO_NORMALIZED
 
 /***/ },
-/* 41 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict'
@@ -4872,7 +4849,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 42 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict'
@@ -4908,7 +4885,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 43 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict'
@@ -4952,7 +4929,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 44 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict'
@@ -4998,7 +4975,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 45 */
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict'
@@ -5007,7 +4984,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var STR_OBJECT    = 'object'
 	var HAS_OWN       = Object.prototype.hasOwnProperty
 
-	var copyList = __webpack_require__(43)
+	var copyList = __webpack_require__(42)
 
 	/**
 	 * Copies all properties named in the namedKeys, from source to destination
@@ -5054,7 +5031,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
-/* 46 */
+/* 45 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict'
@@ -5063,7 +5040,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var STR_OBJECT    = 'object'
 	var HAS_OWN       = Object.prototype.hasOwnProperty
 
-	var copyListIf = __webpack_require__(44)
+	var copyListIf = __webpack_require__(43)
 
 	/**
 	 * Copies all properties named in the namedKeys, from source to destination,
@@ -5119,6 +5096,39 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 /***/ },
+/* 46 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = function(){
+
+	    'use strict';
+
+	    var fns = {}
+
+	    return function(len){
+
+	        if ( ! fns [len ] ) {
+
+	            var args = []
+	            var i    = 0
+
+	            for (; i < len; i++ ) {
+	                args.push( 'a[' + i + ']')
+	            }
+
+	            fns[len] = new Function(
+	                            'c',
+	                            'a',
+	                            'return new c(' + args.join(',') + ')'
+	                        )
+	        }
+
+	        return fns[len]
+	    }
+
+	}()
+
+/***/ },
 /* 47 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -5157,11 +5167,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var hasOwn    = __webpack_require__(67)
 	var newify    = __webpack_require__(66)
-	var copyUtils = __webpack_require__(6)
+	var copyUtils = __webpack_require__(7)
 	var copyList  = copyUtils.copyList
 	var copy      = copyUtils.copy
 	var isObject  = __webpack_require__(68).object
-	var EventEmitter = __webpack_require__(15).EventEmitter
+	var EventEmitter = __webpack_require__(24).EventEmitter
 	var inherits = __webpack_require__(63)
 	var VALIDATE = __webpack_require__(64)
 

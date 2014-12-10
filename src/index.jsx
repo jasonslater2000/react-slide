@@ -164,6 +164,7 @@ module.exports = React.createClass({
             enableTrackClick: true,
 
             defaultStyle: {
+
             },
 
             defaultVerticalStyle: {
@@ -216,6 +217,10 @@ module.exports = React.createClass({
             defaultVerticalHandleSize: {
                 width : 20,
                 height: 10
+            },
+            defaultHorizontalHandleStyle: {
+                transform: 'translate3d(0px, -50%, 0px)',
+                top: '50%'
             },
             defaultVerticalHandleStyle: {
                 transform: 'translate3d(-50%, 0px, 0px)',
@@ -520,7 +525,7 @@ module.exports = React.createClass({
             handleStyle.left = offset
             handleStyle.marginLeft = -handleSize.width/2
             handleStyle.marginTop  = handleStyle.marginBottom = 'auto'
-            handleStyle.top = handleStyle.bottom = 0
+            // handleStyle.top = handleStyle.bottom = 0
         } else {
             handleStyle.top = offset
             handleStyle.marginTop = -handleSize.height/2
@@ -565,7 +570,7 @@ module.exports = React.createClass({
         event.preventDefault()
         event.stopPropagation()
 
-        this.setupDrag(props)
+        this.setupDrag(event, props)
     },
 
     getHandle: function(){
@@ -599,7 +604,7 @@ module.exports = React.createClass({
         return Region.from(this.getDOMNode())
     },
 
-    setupDrag: function(props, initialDiff){
+    setupDrag: function(event, props, initialDiff){
 
         initialDiff = initialDiff || 0
 

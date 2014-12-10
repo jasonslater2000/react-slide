@@ -36,6 +36,7 @@ var App = React.createClass({
 
                 <Slider
                     trackRadius={20}
+                    tickStep={30}
                     trackStyle={{height: 4}}
                     trackFillStyle={{backgroundColor: 'red'}}
                     handleSize={20}

@@ -209,13 +209,15 @@ module.exports = React.createClass({
                 cursor: 'pointer',
                 zIndex: 1
             },
-            defaultHorizontalHandleStyle: {
+            defaultHorizontalHandleSize: {
                 width : 10,
                 height: 20
             },
-            defaultVerticalHandleStyle: {
+            defaultVerticalHandleSize: {
                 width : 20,
-                height: 10,
+                height: 10
+            },
+            defaultVerticalHandleStyle: {
                 transform: 'translate3d(-50%, 0px, 0px)',
                 left: '50%'
             },
@@ -494,9 +496,12 @@ module.exports = React.createClass({
     },
 
     getHandleSize: function(props){
+        var obj = props.orientation === 'horizontal'?
+                    props.defaultHorizontalHandleSize:
+                    props.defaultVerticalHandleSize
         return {
-            width : props.handleWidth || props.handleSize,
-            height: props.handleHeight || props.handleSize,
+            width : props.handleWidth || props.handleSize || obj.width,
+            height: props.handleHeight || props.handleSize || obj.height,
         }
     },
 

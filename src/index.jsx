@@ -116,17 +116,8 @@ function positionStyle(value, props, style){
     var horiz  = props.orientation == 'horizontal'
 
     style[horiz?'width':'height'] = 100 - offset + '%'
-    // style[horiz? 'bottom':'right'] = 0
 
     return style
-}
-
-function isStartValueRespected(value, props){
-    return value >= props.startValue
-}
-
-function isEndValueRespected(value, props){
-    return value <= props.endValue
 }
 
 module.exports = React.createClass({
@@ -145,12 +136,10 @@ module.exports = React.createClass({
         step: stringOrNumber,
         tickStep: stringOrNumber,
         ticks: React.PropTypes.array,
-        // shiftStep: stringOrNumber,
 
         toStep  : React.PropTypes.func,
         onDrag  : React.PropTypes.func,
         onChange: React.PropTypes.func,
-
 
         handleSize: stringOrNumber,
 
@@ -170,11 +159,16 @@ module.exports = React.createClass({
             endValue: 100,
             step: 1,
 
-            trackRadius: 10,
+            trackRadius: 0,
+
+            enableTrackClick: true,
 
             defaultStyle: {
-                position: 'relative',
-                display: 'flex'
+            },
+
+            defaultVerticalStyle: {
+                height: 200,
+                width: 20
             },
 
             defaultTrackStyle: absoluteCenter({
@@ -182,6 +176,14 @@ module.exports = React.createClass({
                 cursor: 'pointer',
                 backgroundColor: 'rgb(216, 216, 213)'
             }),
+
+            defaultHorizontalTrackStyle: {
+                height: 10
+            },
+
+            defaultVerticalTrackStyle: {
+                width: 10
+            },
 
             defaultTrackFillStyle: {
                 position: 'absolute',
@@ -191,9 +193,15 @@ module.exports = React.createClass({
                 backgroundColor: 'gray'
             },
 
-            defaultTrackLineStyle: absoluteCenter({
-                // backgroundColor: 'white'
-            }),
+            defaultTrackLineStyle: {
+                position: 'absolute'
+            },
+            defaultHorizontalTrackLineStyle: {
+                height: '100%'
+            },
+            defaultVerticalTrackLineStyle: {
+                width: '100%'
+            },
 
             defaultHandleStyle: {
                 position: 'absolute',
@@ -201,13 +209,37 @@ module.exports = React.createClass({
                 cursor: 'pointer',
                 zIndex: 1
             },
+            defaultHorizontalHandleStyle: {
+                width : 10,
+                height: 20
+            },
+            defaultVerticalHandleStyle: {
+                width : 20,
+                height: 10,
+                transform: 'translate3d(-50%, 0px, 0px)',
+                left: '50%'
+            },
             defaultTickStyle: {
-                width: 1,
                 boxSizing: 'border-box',
-                height: '100%',
-                borderLeft: '1px solid red',
+                position: 'absolute',
+                borderStyle: 'solid',
+                borderWidth: 0
+            },
+            defaultHorizontalTickStyle: {
+                height: '100%'
+            },
+            defaultVerticalTickStyle: {
+                width: '100%'
+            },
+            defaultWrapStyle: {
+                position: 'relative',
+                height: '100%'
+            },
+            defaultTickWrapStyle: {
                 position: 'absolute'
             },
+            tickColor: 'rgb(172, 172, 172)',
+            tickWidth: 1,
             toStep: valueToStep
         }
     },
@@ -222,8 +254,10 @@ module.exports = React.createClass({
         var track = this.renderTrack(props, this.state)
         var ticks = this.renderTicks(props, this.state)
 
+        var wrapStyle = assign({}, props.defaultWrapStyle, props.wrapStyle)
+
         return <div {...props}>
-            <div style={{position: 'relative', flex: 1}}>
+            <div className="z-wrap" style={wrapStyle}>
                 {ticks}
                 {track}
             </div>
@@ -234,11 +268,31 @@ module.exports = React.createClass({
         var props = {}
 
         assign(props, thisProps)
+        props.horizontal = props.orientation === 'horizontal'
 
-        props.style = this.prepareStyle(props)
+        props.style       = this.prepareStyle(props)
+        props.handleStyle    = this.prepareHandleStyle(props)
+        props.trackStyle     = this.prepareTrackStyle(props)
+        props.trackLineStyle = this.prepareTrackLineStyle(props)
+        props.trackFillStyle = this.prepareTrackFillStyle(props)
+        props.tickStyle      = this.prepareTickStyle(props)
+
         props.value = this.toValue(getValue(props, state), props)
 
+        props.className = this.prepareClassName(props)
+
         return props
+    },
+
+    prepareClassName: function(props) {
+        var className = props.className || ''
+        var horiz = props.horizontal
+        var orientationClass = horiz? 'z-orientation-horizontal': 'z-orientation-vertical'
+
+        className += ' ' + orientationClass
+        className += ' z-slider'
+
+        return className
     },
 
     toValue: function(value, props){
@@ -248,37 +302,96 @@ module.exports = React.createClass({
     },
 
     prepareStyle: function(props){
-        var style = {}
+        var orientationStyle = props.horizontal? props.defaultHorizontalStyle: props.defaultVerticalStyle
+        return assign({}, props.defaultStyle, orientationStyle, props.style)
+    },
 
-        assign(style, props.defaultStyle, props.style)
+    prepareHandleStyle: function(props) {
+        var horiz = props.horizontal
+        var orientationStyle = horiz? props.defaultHorizontalHandleStyle: props.defaultVerticalHandleStyle
+
+        var handleStyle = assign({}, props.defaultHandleStyle, orientationStyle, props.handleStyle)
+        var handleSize  = this.getHandleSize(props)
+
+        handleStyle.width = typeof handleStyle.width === 'undefined'? handleSize.width: handleStyle.width
+        handleStyle.height = typeof handleStyle.height === 'undefined'? handleSize.height: handleStyle.height
+
+        return handleStyle
+    },
+
+    prepareTickStyle: function(props) {
+        var horiz = props.horizontal
+        var side = horiz? 'left': 'top'
+        var orientationStyle = horiz? props.defaultHorizontalTickStyle: props.defaultVerticalTickStyle
+        var style = assign({}, props.defaultTickStyle, orientationStyle, props.tickStyle)
+
+        if (horiz){
+            style.borderLeftWidth = style.borderLeftWidth || props.tickWidth
+            style.borderLeftColor = style.borderLeftColor || props.tickColor
+            style.marginLeft      = -props.tickWidth/2
+        } else {
+            style.borderTopWidth = style.borderTopWidth || props.tickWidth
+            style.borderTopColor = style.borderTopColor || props.tickColor
+            style.marginTop      = -props.tickWidth/2
+        }
 
         return style
+    },
+
+    prepareTrackStyle: function(props) {
+        var horiz = props.horizontal
+        var trackOrientationStyle = horiz? props.defaultHorizontalTrackStyle: props.defaultVerticalTrackStyle
+        var trackStyle = assign({}, props.defaultTrackStyle, trackOrientationStyle, props.trackStyle)
+
+        if (props.trackRadius){
+            trackStyle.borderRadius = typeof trackStyle.borderRadius === 'undefined'?
+                                        props.trackRadius:
+                                        trackStyle.borderRadius
+        }
+
+        return trackStyle
+    },
+
+    prepareTrackLineStyle: function(props) {
+        var horiz = props.horizontal
+        var orientationStyle = horiz? props.defaultHorizontalTrackLineStyle: props.defaultVerticalTrackLineStyle
+        var trackLineStyle = assign({}, props.defaultTrackLineStyle, orientationStyle, props.trackLineStyle)
+
+        return trackLineStyle
+    },
+
+    prepareTrackFillStyle: function(props) {
+        var horiz = props.horizontal
+        var trackFillStyle = assign({}, props.defaultTrackFillStyle, props.trackFillStyle)
+
+        if (props.trackRadius){
+            if (horiz){
+                trackFillStyle.borderTopLeftRadius    = trackFillStyle.borderTopLeftRadius    || props.trackRadius
+                trackFillStyle.borderBottomLeftRadius = trackFillStyle.borderBottomLeftRadius || props.trackRadius
+            } else {
+                trackFillStyle.borderTopLeftRadius  = trackFillStyle.borderTopLeftRadius  || props.trackRadius
+                trackFillStyle.borderTopRightRadius = trackFillStyle.borderTopRightRadius || props.trackRadius
+            }
+        }
+
+        return trackFillStyle
     },
 
     renderTrack: function(props, state){
 
         var value = props.value
-        var horiz = props.orientation === 'horizontal'
+        var horiz = props.horizontal
 
-        var trackStyle     = assign({}, props.defaultTrackStyle, props.trackStyle, { flex: 1, width: '100%'})
-        var trackLineStyle = assign({}, props.defaultTrackLineStyle, props.trackLineStyle)
-        var trackFillStyle = assign({}, props.defaultTrackFillStyle, props.trackFillStyle)
-
-        if (props.trackRadius){
-            trackStyle.borderRadius = trackStyle.borderRadius || props.trackRadius
-            if (horiz){
-                trackFillStyle.borderTopLeftRadius = trackFillStyle.borderTopLeftRadius || props.trackRadius
-                trackFillStyle.borderBottomLeftRadius = trackFillStyle.borderBottomLeftRadius || props.trackRadius
-            } else {
-                trackFillStyle.borderTopLeftRadius = trackFillStyle.borderTopLeftRadius || props.trackRadius
-                trackFillStyle.borderTopRightRadius = trackFillStyle.borderTopRightRadius || props.trackRadius
-            }
-        }
+        var trackStyle     = props.trackStyle
+        var trackLineStyle = props.trackLineStyle
+        var trackFillStyle = props.trackFillStyle
 
         positionStyle(value, props, trackFillStyle)
 
-
-        var handleSize = this.getHandleSize(props)
+        var handleSize = {
+            width : props.handleStyle.width,
+            height: props.handleStyle.height
+        }
         var size
 
         if (horiz){
@@ -287,23 +400,23 @@ module.exports = React.createClass({
             trackLineStyle.left  = size
             trackLineStyle.right = size
             trackFillStyle.paddingLeft = size
-            trackFillStyle.marginLeft = -size
+            trackFillStyle.marginLeft  = -size
         } else {
 
             size = handleSize.height / 2
 
-            trackLineStyle.top  = size
+            trackLineStyle.top    = size
             trackLineStyle.bottom = size
             trackFillStyle.paddingTop = size
-            trackFillStyle.marginTop = -size
+            trackFillStyle.marginTop  = -size
         }
 
-        var handle = this.renderTrackHandle(props, state)
+        var handle = this.renderHandle(props, state)
 
         return (
-                <div className="z-track" style={trackStyle} onMouseDown={this.handleTrackMouseDown}>
+                <div className="z-track" style={trackStyle} onMouseDown={this.handleTrackMouseDown.bind(this, props)}>
                     <div ref="trackLine" className="z-track-line" style={trackLineStyle}>
-                        <div style={trackFillStyle} />
+                        <div className="z-track-fill" style={trackFillStyle} />
                         {handle}
                     </div>
 
@@ -312,16 +425,26 @@ module.exports = React.createClass({
     },
 
     renderTicks: function(props, state){
+
+        var horiz = props.orientation === 'horizontal'
         var ticks = props.ticks = this.prepareTicks(props)
+        var handleSize = {
+            width : props.handleStyle.width,
+            height: props.handleStyle.height
+        }
 
         if (!ticks || !ticks.length){
             return
         }
 
-        var tickWrapStyle = {
-            position: 'absolute',
-            width: '100%',
-            height: '100%'
+        var tickWrapStyle = assign({}, props.defaultTickWrapStyle, props.tickWrapStyle)
+
+        if (horiz){
+            tickWrapStyle.left = tickWrapStyle.right = handleSize.width / 2
+            tickWrapStyle.height = '100%'
+        } else {
+            tickWrapStyle.top = tickWrapStyle.bottom = handleSize.height / 2
+            tickWrapStyle.width = '100%'
         }
 
         return (
@@ -332,8 +455,9 @@ module.exports = React.createClass({
     },
 
     renderTick: function(props, tickValue){
-        var side = props.orientation === 'horizontal'? 'left': 'top'
-        var style = assign({}, props.defaultTickStyle, props.tickStyle)
+
+        var side  = props.horizontal? 'right':'bottom'
+        var style = assign({}, props.tickStyle)
 
         style[side] = getOffset(tickValue, props) + '%'
 
@@ -376,40 +500,65 @@ module.exports = React.createClass({
         }
     },
 
-    renderTrackHandle: function(props, state){
+    renderHandle: function(props, state){
         var value = props.value
 
+        var handleStyle = props.handleStyle
         var handleSize  = this.getHandleSize(props)
-        var handleStyle = assign({}, props.defaultHandleStyle, props.handleStyle, handleSize)
+
+        handleSize.width = handleStyle.width
+        handleSize.height = handleStyle.height
+
         var offset = 100 - getOffset(value, props) + '%'
 
-        if (props.orientation == 'horizontal'){
-            handleStyle.marginLeft = -handleSize.width/2
-            handleStyle.marginTop  = 'auto'
+        if (props.horizontal){
             handleStyle.left = offset
+            handleStyle.marginLeft = -handleSize.width/2
+            handleStyle.marginTop  = handleStyle.marginBottom = 'auto'
+            handleStyle.top = handleStyle.bottom = 0
         } else {
-            handleStyle.marginTop = -handleSize.height/2
-            handleStyle.marginLeft = 'auto'
             handleStyle.top = offset
+            handleStyle.marginTop = -handleSize.height/2
+            handleStyle.marginLeft = handleStyle.marginRight = 'auto'
         }
 
         if (props.trackRadius){
-            handleStyle.borderRadius = handleStyle.borderRadius || props.trackRadius
+            handleStyle.borderRadius = typeof handleStyle.borderRadius === 'undefined'? props.trackRadius: handleStyle.borderRadius
         }
 
-        return <div
-                    ref="handle"
-                    data-value={value}
-                    onMouseDown={this.handleMouseDown.bind(this, props)}
-                    style={handleStyle}
-                />
+        var handleProps = {
+            ref: 'handle',
+            className: 'z-handle',
+            'data-value': value,
+            sliderProps: props,
+            onMouseDown: this.handleMouseDown.bind(this, props),
+            style: handleStyle
+        }
+
+        return (props.handleFactory || React.DOM.div)(handleProps)
     },
 
-    handleTrackMouseDown: function(event){
+    handleTrackMouseDown: function(props, event){
+        if (!props.enableTrackClick){
+            return
+        }
+        var horiz = props.orientation === 'horizontal'
+        var region = Region.from(this.getTrackDOMNOde())
+        var dragSize = this.getAvailableDragSize(props)
+        var handleSize = props.handleStyle[horiz? 'width': 'height']
+
+        var offset = horiz?
+                        event.pageX - region.left:
+                        event.pageY - region.top
+
+        var percentage = offset * 100 / dragSize
+
+        this.setValue(getValueForPercentage(percentage, props))
     },
 
     handleMouseDown: function(props, event){
         event.preventDefault()
+        event.stopPropagation()
 
         this.setupDrag(props)
     },
@@ -428,11 +577,13 @@ module.exports = React.createClass({
         return initialValue
     },
 
+    getTrackDOMNOde: function() {
+        return this.refs.trackLine.getDOMNode()
+    },
+
     getAvailableDragSize: function(props){
-        var horiz = props.orientation === 'horizontal'
-        var dom = this.getDOMNode()
-        var region = Region.from(this.refs.trackLine.getDOMNode())
-        var handleSize = this.getHandleSize(props)
+        var horiz  = props.orientation === 'horizontal'
+        var region = Region.from(this.getTrackDOMNOde())
 
         return horiz?
                     region.width:
@@ -443,17 +594,11 @@ module.exports = React.createClass({
         return Region.from(this.getDOMNode())
     },
 
-    getSizeName: function(props){
-        props = props || this.props
-        return props.orientation === 'horizontal'? 'width': 'height'
-    },
-
     setupDrag: function(props, initialDiff){
 
         initialDiff = initialDiff || 0
 
         var horiz = props.orientation === 'horizontal'
-        var sizeName = this.getSizeName(props)
 
         var targetRegion    = Region.from(this.getHandle())
         var constrainRegion = Region.from(this.getDOMNode())
@@ -480,15 +625,8 @@ module.exports = React.createClass({
                 var percentage = diff * 100 / dragSize
 
                 var diffValue  = getValueForPercentage(percentage, props)
-                var newValue   = this.toValue(initialValue + diffValue, props)
 
-                if (newValue != this.state.value){
-                    this.setState({
-                        value: newValue
-                    })
-
-                    ;(this.props.onDrag || emptyFn)(newValue, props)
-                }
+                this.setValue(initialValue + diffValue, { setState: true })
             },
 
             onDrop: function(){
@@ -507,5 +645,20 @@ module.exports = React.createClass({
                 ;(this.props.onChange || emptyFn)(value)
             }
         })
+    },
+
+    setValue: function(value, config) {
+        var props = this.props
+        var newValue = this.toValue(value, props)
+
+        if (newValue != props.value){
+            if (typeof props.defaultValue != 'undefined' || (config && config.setState)){
+                this.setState({
+                    value: newValue
+                })
+            }
+
+            ;(props.onDrag || emptyFn)(newValue, props)
+        }
     }
 })

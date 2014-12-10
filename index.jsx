@@ -24,21 +24,23 @@ var App = React.createClass({
 
         return (
             <div className="App" style={{padding: 10}}>
-            {VALUE}
-            <Slider tickStep={10} style={firstStyle}
-                onDrag={this.onChange} value={VALUE}/>
+                Current value: {VALUE}
 
-            <Slider
-                orientation="vertical"
-                style={{}}
-                onDrag={this.onChange} value={VALUE}/>
+                <Slider tickStep={10} style={firstStyle}
+                    onDrag={this.onChange} value={VALUE}/>
 
-            <Slider
-                trackRadius={20}
-                trackStyle={{height: 4}}
-                trackFillStyle={{backgroundColor: 'red'}}
-                handleSize={20} tickStep={10} style={{padding: 10}}
-                onDrag={this.onChange} value={VALUE}/>
+                <Slider
+                    orientation="vertical"
+                    tickStep={5}
+                    onDrag={this.onChange} value={VALUE}/>
+
+                <Slider
+                    trackRadius={20}
+                    trackStyle={{height: 4}}
+                    trackFillStyle={{backgroundColor: 'red'}}
+                    handleSize={20}
+                    style={{padding: 10, width: 200}}
+                    onDrag={this.onChange} value={VALUE}/>
             </div>
         )
     }

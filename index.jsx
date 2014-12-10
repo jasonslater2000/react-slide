@@ -22,27 +22,19 @@ var App = React.createClass({
             height: 20
         }
 
-        var secondStyle = {
-            // border: '1px solid gray'
-            //,
-            // height: 400,
-            // width: 20,
-            // margin: 10,
-            // padding: 10
-        }
-
         return (
             <div className="App" style={{padding: 10}}>
             {VALUE}
+            <Slider tickStep={10} style={firstStyle}
+                onDrag={this.onChange} value={VALUE}/>
+
             <Slider
-                tickStep={10}
-                style={firstStyle} onDrag={this.onChange} value={VALUE} onChangex={this.onChange}/>
+                orientation="vertical"
+                style={{}}
+                onDrag={this.onChange} value={VALUE}/>
 
-
-                <Slider
-                    orientation="vertical"
-                    style={secondStyle}
-                    onDrag={this.onChange} value={VALUE} onChangex={this.onChange}/>
+            <Slider trackRadius={10} handleHeight={10} tickStep={10} style={{padding: 10}}
+                onDrag={this.onChange} value={VALUE}/>
             </div>
         )
     }

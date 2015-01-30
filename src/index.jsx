@@ -160,11 +160,17 @@ module.exports = React.createClass({
             step: 1,
 
             trackRadius: 0,
+            statefulDrag: true,
 
             enableTrackClick: true,
 
             defaultStyle: {
 
+            },
+
+            defaultHorizontalStyle: {
+                height: 20,
+                width: 200
             },
 
             defaultVerticalStyle: {
@@ -636,7 +642,7 @@ module.exports = React.createClass({
 
                 var diffValue  = getValueForPercentage(percentage, props)
 
-                this.setValue(initialValue + diffValue, { setState: true })
+                this.setValue(initialValue + diffValue, { setState: true, onDrag: true })
             },
 
             onDrop: function(){
@@ -652,23 +658,33 @@ module.exports = React.createClass({
 
                 this.setState(state)
 
-                ;(this.props.onChange || emptyFn)(value)
+                this.notify(value)
             }
         })
     },
 
-    setValue: function(value, config) {
-        var props = this.props
-        var newValue = this.toValue(value, props)
+    notify: function(value){
+        ;(this.props.onChange || emptyFn)(value)
+    },
 
-        if (newValue != props.value){
-            if (typeof props.defaultValue != 'undefined' || (config && config.setState)){
+    setValue: function(value, config) {
+        var props    = this.props
+        var newValue = this.toValue(value, props)
+        var onDrag   = config && config.onDrag
+
+        // if (newValue != props.value){
+            // if (typeof props.defaultValue != 'undefined' || onDrag){
+            if (typeof props.defaultValue != 'undefined' || (this.props.statefulDrag && onDrag)){
                 this.setState({
                     value: newValue
                 })
             }
+        // }
 
+        if (onDrag){
             ;(props.onDrag || emptyFn)(newValue, props)
+        } else {
+            this.notify(value)
         }
     }
 })

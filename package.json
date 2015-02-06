@@ -29,10 +29,12 @@
   },
   "dependencies": {
     "css-utils": "^1.0.0",
-    "drag-helper": "^1.2.0",
+    "drag-helper": "^1.2.3",
     "normalize.css": "^3.0.2",
     "object-assign": "^2.0.0",
     "react": "^0.12.1",
+    "react-event-names": "^1.0.0",
+    "react-style-normalizer": "^1.0.2",
     "region": "^2.0.0"
   },
   "repository": {

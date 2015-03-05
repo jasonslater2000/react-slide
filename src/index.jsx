@@ -8,47 +8,26 @@ var normalize   = require('react-style-normalizer')
 
 var EVENT_NAMES = require('react-event-names')
 
-var stringOrNumber = React.PropTypes.oneOfType([
-    React.PropTypes.string,
-    React.PropTypes.number
+var absoluteCenter = require('./absoluteCenter')
+var clamp          = require('./clamp')
+
+var PropTypes = React.PropTypes
+
+var stringOrNumber = PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.number
 ])
 
-function clamp(value, min, max){
-
-    if (typeof min === 'undefined'){
-        min = value
-    }
-    if (typeof max === 'undefined'){
-        min = value
-    }
-
-    var aux
-    if (min > max){
-        aux = min
-        min = max
-        max = aux
-    }
-
-    return value < min?
-                min:
-                value > max?
-                    max:
-                    value
-}
 
 function emptyFn(){}
 
 function getValue(props, state){
-    var hasDefaultValue = typeof props.defaultValue != 'undefined'
-
-    var value = hasDefaultValue?
-                    props.defaultValue:
+    var value = props.value == null?
+                    state.value:
                     props.value
 
-    if (state.dragging || hasDefaultValue){
-        value = typeof state.value != 'undefined'?
-                    state.value:
-                    props.defaultValue
+    if (state.dragging){
+        value = state.value
     }
 
     return value
@@ -59,16 +38,6 @@ function toValue(value, props){
             clamp(value, props.startValue, props.endValue),
             props.step
         )
-}
-
-function absoluteCenter(style){
-    style = style || {}
-
-    style.margin = 'auto'
-    style.position = 'absolute'
-    style.top = style.bottom = style.left = style.right = 0
-
-    return style
 }
 
 function getPercentageForValue(value, props){
@@ -115,30 +84,32 @@ function getOffset(value, props){
 function positionStyle(value, props, style){
     style = style || {}
 
-    var offset = getOffset(value, props)// + '%'
+    var offset = getOffset(value, props)
     var horiz  = props.orientation == 'horizontal'
 
-    style[horiz?'width':'height'] = 100 - offset + '%'
+    style[horiz? 'width': 'height'] = 100 - offset + '%'
 
     return style
 }
 
+var DISPLAY_NAME = 'ReactSlider'
+
 module.exports = React.createClass({
 
-    displayName: 'ReactSlider',
+    displayName: DISPLAY_NAME,
 
     propTypes: {
         minValue: stringOrNumber,
         maxValue: stringOrNumber,
 
         startValue: stringOrNumber.isRequired,
-        endValue: stringOrNumber.isRequired,
+        endValue  : stringOrNumber.isRequired,
 
         value: stringOrNumber,
 
-        step: stringOrNumber,
+        step    : stringOrNumber,
         tickStep: stringOrNumber,
-        ticks: React.PropTypes.array,
+        ticks   : React.PropTypes.array,
 
         toStep  : React.PropTypes.func,
         onDrag  : React.PropTypes.func,
@@ -157,9 +128,14 @@ module.exports = React.createClass({
 
     getDefaultProps: function(){
         return {
-            orientation: 'horizontal',
+            'data-display-name': DISPLAY_NAME,
+
+            smallTickPercentage: 80,
+            orientation        : 'horizontal',
+
             startValue: 0,
-            endValue: 100,
+            endValue  : 100,
+
             step: 1,
 
             trackRadius: 0,
@@ -173,18 +149,18 @@ module.exports = React.createClass({
 
             defaultHorizontalStyle: {
                 height: 20,
-                width: 200
+                width : 200
             },
 
             defaultVerticalStyle: {
                 height: 200,
-                width: 20
+                width : 20
             },
 
             defaultTrackStyle: absoluteCenter({
                 position: 'relative',
                 cursor: 'pointer',
-                backgroundColor: 'rgb(216, 216, 213)'
+                background: 'rgb(218, 218, 218)'
             }),
 
             defaultHorizontalTrackStyle: {
@@ -200,7 +176,7 @@ module.exports = React.createClass({
                 width   : '100%',
                 height  : '100%',
                 boxSizing: 'content-box',
-                backgroundColor: 'gray'
+                background: 'rgb(120, 120, 120)'
             },
 
             defaultTrackLineStyle: {
@@ -215,10 +191,19 @@ module.exports = React.createClass({
 
             defaultHandleStyle: {
                 position: 'absolute',
-                backgroundColor: '#3f51b5',
+                background: 'rgb(103, 175, 233)',
                 cursor: 'pointer',
                 zIndex: 1
             },
+
+            defaultOverHandleStyle: {
+                background: 'rgb(118, 181, 231)'
+            },
+
+            defaultActiveHandleStyle: {
+                background: 'rgb(90, 152, 202)'
+            },
+
             defaultHorizontalHandleSize: {
                 width : 10,
                 height: 20
@@ -261,14 +246,25 @@ module.exports = React.createClass({
     },
 
     getInitialState: function(){
-        return {}
+        return {
+            value: this.props.defaultValue
+        }
+    },
+
+    componentWillReceiveProps: function(newProps){
+        this.tickCache = null
     },
 
     render: function() {
 
         var props = this.prepareProps(this.props, this.state)
         var track = this.renderTrack(props, this.state)
-        var ticks = this.renderTicks(props, this.state)
+
+        var ticks = this.tickCache?
+                        this.tickCache:
+                        this.renderTicks(props, this.state)
+
+        this.tickCache = ticks
 
         var wrapStyle = assign({}, props.defaultWrapStyle, props.wrapStyle)
 
@@ -284,9 +280,10 @@ module.exports = React.createClass({
         var props = {}
 
         assign(props, thisProps)
+
         props.horizontal = props.orientation === 'horizontal'
 
-        props.style       = this.prepareStyle(props)
+        props.style          = this.prepareStyle(props)
         props.handleStyle    = this.prepareHandleStyle(props)
         props.trackStyle     = this.prepareTrackStyle(props)
         props.trackLineStyle = this.prepareTrackLineStyle(props)
@@ -297,13 +294,16 @@ module.exports = React.createClass({
 
         props.className = this.prepareClassName(props)
 
+        props.onDrag = null
+
         return props
     },
 
     prepareClassName: function(props) {
         var className = props.className || ''
         var horiz = props.horizontal
-        var orientationClass = horiz? 'z-orientation-horizontal': 'z-orientation-vertical'
+        var orientationClass = horiz?
+                'z-orientation-horizontal': 'z-orientation-vertical'
 
         className += ' ' + orientationClass
         className += ' z-slider'
@@ -318,21 +318,49 @@ module.exports = React.createClass({
     },
 
     prepareStyle: function(props){
-        var orientationStyle = props.horizontal? props.defaultHorizontalStyle: props.defaultVerticalStyle
-        return assign({}, props.defaultStyle, orientationStyle, props.style)
+        var orientationStyle = props.horizontal?
+                                props.defaultHorizontalStyle:
+                                props.defaultVerticalStyle
+
+        return normalize(assign({}, props.defaultStyle, orientationStyle, props.style))
     },
 
     prepareHandleStyle: function(props) {
         var horiz = props.horizontal
         var orientationStyle = horiz? props.defaultHorizontalHandleStyle: props.defaultVerticalHandleStyle
 
-        var handleStyle = assign({}, props.defaultHandleStyle, orientationStyle, props.handleStyle)
+        var defaultActiveHandleStyle
+        var activeHandleStyle
+
+        if (this.state.handleMouseDown){
+            defaultActiveHandleStyle = props.defaultActiveHandleStyle
+            activeHandleStyle = props.activeHandleStyle
+        }
+
+        var defaultOverHandleStyle
+        var overHandleStyle
+
+        if (this.state.handleMouseOver){
+            defaultOverHandleStyle = props.defaultOverHandleStyle
+            overHandleStyle = props.overHandleStyle
+        }
+
+        var handleStyle = assign({},
+                            props.defaultHandleStyle,
+                            orientationStyle,
+                            defaultOverHandleStyle,
+                            defaultActiveHandleStyle,
+
+                            props.handleStyle,
+                            overHandleStyle,
+                            activeHandleStyle
+                        )
         var handleSize  = this.getHandleSize(props)
 
-        handleStyle.width = typeof handleStyle.width === 'undefined'? handleSize.width: handleStyle.width
+        handleStyle.width  = typeof handleStyle.width  === 'undefined'? handleSize.width : handleStyle.width
         handleStyle.height = typeof handleStyle.height === 'undefined'? handleSize.height: handleStyle.height
 
-        return handleStyle
+        return normalize(handleStyle)
     },
 
     prepareTickStyle: function(props) {
@@ -351,7 +379,7 @@ module.exports = React.createClass({
             style.marginTop      = -props.tickWidth/2
         }
 
-        return style
+        return normalize(style)
     },
 
     prepareTrackStyle: function(props) {
@@ -365,15 +393,19 @@ module.exports = React.createClass({
                                         trackStyle.borderRadius
         }
 
-        return trackStyle
+        return normalize(trackStyle)
     },
 
     prepareTrackLineStyle: function(props) {
         var horiz = props.horizontal
-        var orientationStyle = horiz? props.defaultHorizontalTrackLineStyle: props.defaultVerticalTrackLineStyle
+
+        var orientationStyle = horiz?
+                                props.defaultHorizontalTrackLineStyle:
+                                props.defaultVerticalTrackLineStyle
+
         var trackLineStyle = assign({}, props.defaultTrackLineStyle, orientationStyle, props.trackLineStyle)
 
-        return trackLineStyle
+        return normalize(trackLineStyle)
     },
 
     prepareTrackFillStyle: function(props) {
@@ -440,7 +472,7 @@ module.exports = React.createClass({
         )
     },
 
-    renderTicks: function(props, state){
+    renderTicks: function(props){
 
         var horiz = props.orientation === 'horizontal'
         var ticks = props.ticks = this.prepareTicks(props)
@@ -470,24 +502,52 @@ module.exports = React.createClass({
         )
     },
 
-    renderTick: function(props, tickValue){
+    renderTick: function(props, tick){
+
+        var tickValue
+        var tickStyle
+        var type = 'big'
+
+        if (typeof tick == 'object'){
+            tickValue = tick.value
+            tickStyle = tick.style
+            type = tick.type || type
+        } else {
+            tickValue = tick
+        }
+
+        if (type == 'small'){
+            tickStyle = tickStyle || {}
+
+            var percentage = parseFloat(props.smallTickPercentage)
+            tickStyle[props.horizontal? 'top': 'left'] = ((100 - percentage) / 2) + '%'
+            tickStyle[props.horizontal? 'height': 'width'] = percentage + '%'
+        }
 
         var side  = props.horizontal? 'right':'bottom'
-        var style = assign({}, props.tickStyle)
+        var style = assign({}, props.tickStyle, tickStyle)
 
         style[side] = getOffset(tickValue, props) + '%'
 
         var tickProps = {
-            key: tickValue + '-tick',
+            key         : tickValue + '-tick',
+            value       : tickValue,
+            orientation : props.orientation,
+            type        : type,
             'data-value': tickValue,
-            style: style
+            style       : style
         }
 
-        if (props.tickFactory){
-            return props.tickFactory(tickProps)
+        var defaultFactory = React.DOM.div
+        var factory = props.tickFactory || defaultFactory
+
+        var result = factory(tickProps)
+
+        if (result === undefined){
+            result = defaultFactory(tickProps)
         }
 
-        return <div {...tickProps} />
+        return result
     },
 
     prepareTicks: function(props){
@@ -525,7 +585,7 @@ module.exports = React.createClass({
         var handleStyle = props.handleStyle
         var handleSize  = this.getHandleSize(props)
 
-        handleSize.width = handleStyle.width
+        handleSize.width  = handleStyle.width
         handleSize.height = handleStyle.height
 
         var offset = 100 - getOffset(value, props) + '%'
@@ -550,13 +610,40 @@ module.exports = React.createClass({
             ref: 'handle',
             className: 'z-handle',
             'data-value': value,
+            orientation: props.orientation,
+            value: value,
+            dragging: state.dragging,
+            mouseDown: state.handleMouseDown,
             sliderProps: props,
-            style: normalize(handleStyle)
+            style: normalize(handleStyle),
+            onMouseEnter: this.handleMouseEnter,
+            onMouseLeave: this.handleMouseLeave
         }
 
         handleProps[EVENT_NAMES.onMouseDown] = this.handleMouseDown.bind(this, props)
 
-        return (props.handleFactory || React.DOM.div)(handleProps)
+        var defaultFactory = React.DOM.div
+        var factory = props.handleFactory || defaultFactory
+
+        var result = factory(handleProps)
+
+        if (result === undefined){
+            result = defaultFactory(handleProps)
+        }
+
+        return result
+    },
+
+    handleMouseEnter: function() {
+        this.setState({
+            handleMouseOver: true
+        })
+    },
+
+    handleMouseLeave: function() {
+        this.setState({
+            handleMouseOver: false
+        })
     },
 
     handleTrackMouseDown: function(props, event){
@@ -627,6 +714,10 @@ module.exports = React.createClass({
         var dragSize     = this.getAvailableDragSize(props)
         var initialValue = props.value
 
+        this.setState({
+            handleMouseDown: true
+        })
+
         DragHelper(event, {
 
             scope      : this,
@@ -647,22 +738,21 @@ module.exports = React.createClass({
 
                 var diffValue  = getValueForPercentage(percentage, props)
 
-                this.setValue(initialValue + diffValue, { setState: true, onDrag: true })
+                this.setValue(initialValue + diffValue, { onDrag: true })
             },
 
             onDrop: function(){
 
-                var value = this.state.value
-                var state = {
-                    dragging: false
-                }
+                var value = this.state.dragging?
+                                this.state.value:
+                                props.value
 
-                if (typeof props.defaultValue == 'undefined'){
-                    state.value = null
+                var state = {
+                    dragging: false,
+                    handleMouseDown: false
                 }
 
                 this.setState(state)
-
                 this.notify(value)
             }
         })
@@ -673,23 +763,21 @@ module.exports = React.createClass({
     },
 
     setValue: function(value, config) {
+
         var props    = this.props
         var newValue = this.toValue(value, props)
         var onDrag   = config && config.onDrag
 
-        // if (newValue != props.value){
-            // if (typeof props.defaultValue != 'undefined' || onDrag){
-            if (typeof props.defaultValue != 'undefined' || (this.props.statefulDrag && onDrag)){
-                this.setState({
-                    value: newValue
-                })
-            }
-        // }
+        if (typeof props.defaultValue != 'undefined' || (this.props.statefulDrag && onDrag)){
+            this.setState({
+                value: newValue
+            })
+        }
 
         if (onDrag){
             ;(props.onDrag || emptyFn)(newValue, props)
         } else {
-            this.notify(value)
+            this.notify(newValue)
         }
     }
 })

@@ -1,15 +1,14 @@
 'use strict';
 
-var React = require('react')
+var React  = require('react')
 var Slider = require('./src')
 
-require('./index.styl')
-
-var VALUE = 90
+var VALUE = 30
 
 var App = React.createClass({
 
     onChange: function(value){
+
         VALUE = value
         this.setState({})
     },
@@ -19,29 +18,56 @@ var App = React.createClass({
     render: function() {
 
         var firstStyle = {
-            height: 20
+            height: 20,
+            margin: 20
+        }
+
+        function renderTick(props){
+            var tip
+
+            if (props.type == 'big'){
+                tip = <span style={{top: '100%', position:'absolute', left: -10}}>{props.value}</span>
+            }
+            return <div {...props}>
+                {tip}
+            </div>
+        }
+
+        function renderHandle(props){
+            return <div {...props}>
+                <span style={{position: 'absolute', bottom: '100%', visibility: props.mouseDown? 'visible':'hidden', color: props.mouseDown? 'red': 'blue'}}>{props.value}</span>
+            </div>
         }
 
         return (
             <div className="App" style={{padding: 10}}>
                 Current value: {VALUE}
 
-                <Slider tickStep={10} style={firstStyle}
-                    onDrag={this.onChange} value={VALUE}/>
+                <Slider
+                    handleFactory={renderHandle}
+                    tickFactory={renderTick}
+                    ticks={[0, 30, {value:50, type: 'small'}, 70, 100]}
+                    style={firstStyle}
+                    xonDrag={this.onChange}
+                    onChange={this.onChange} value={VALUE}/>
 
                 <Slider
                     orientation="vertical"
+                    xstartValue={-20}
+                    xendValue={20}
                     tickStep={5}
-                    onDrag={this.onChange} value={VALUE}/>
+                    xstep={10}
+                    onChange={this.onChange} value={VALUE}/>
 
                 <Slider
+                    xstartValue={-20}
+                    xendValue={20}
                     trackRadius={20}
-                    tickStep={30}
                     trackStyle={{height: 4}}
                     trackFillStyle={{backgroundColor: 'red'}}
                     handleSize={20}
                     style={{padding: 10, width: 200}}
-                    onDrag={this.onChange} value={VALUE}/>
+                    onChange={this.onChange} value={VALUE}/>
             </div>
         )
     }

@@ -9,15 +9,15 @@
     "build-style": "./node_modules/.bin/webpack --progress --colors --config build-style.config.js",
     "dist": "./node_modules/.bin/webpack --progress --colors --config dist.config.js",
     "dist.min": "./node_modules/.bin/webpack --progress --colors --optimize-minimize --optimize-occurence-order --optimize-dedupe --config dist.min.config.js",
-    "build": "npm run lib && npm run dist && npm run dist.min && npm run build-style",
+    "build": "npm run lib && npm run dist && npm run dist.min",
     "serve": "./node_modules/.bin/http-server -p 9091",
     "dev": "./node_modules/.bin/webpack-dev-server --progress --colors --port 9090 --content-base http://localhost:9091"
   },
   "devDependencies": {
     "css-loader": "^0.9.0",
     "extract-text-webpack-plugin": "^0.3.5",
-    "gulp": "^3.8.10",
-    "gulp-react": "^2.0.0",
+    "gulp": "^3.8.11",
+    "gulp-react": "^3.0.0",
     "http-server": "^0.7.4",
     "jsx-loader": "^0.12.2",
     "nib": "^1.0.4",
@@ -28,14 +28,14 @@
     "webpack-dev-server": "^1.6.6"
   },
   "dependencies": {
-    "css-utils": "^1.0.0",
     "drag-helper": "^1.2.3",
-    "normalize.css": "^3.0.2",
     "object-assign": "^2.0.0",
-    "react": "^0.12.1",
     "react-event-names": "^1.0.0",
     "react-style-normalizer": "^1.0.2",
-    "region": "^2.0.0"
+    "region": "^2.1.2"
+  },
+  "peerDependencies": {
+    "react": ">=0.12.0"
   },
   "repository": {
     "type": "git",

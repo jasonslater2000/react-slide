@@ -672,7 +672,7 @@ module.exports = React.createClass({
     },
 
     getHandle: function(){
-        return this.refs.handle.getDOMNode()
+        return this.refs.handle
     },
 
     getInitialDragValue: function(props, state){
@@ -686,7 +686,7 @@ module.exports = React.createClass({
     },
 
     getTrackDOMNOde: function() {
-        return this.refs.trackLine.getDOMNode()
+        return this.refs.trackLine
     },
 
     getAvailableDragSize: function(props){
@@ -699,7 +699,7 @@ module.exports = React.createClass({
     },
 
     getRegion: function(){
-        return Region.from(this.getDOMNode())
+        return Region.from(this)
     },
 
     setupDrag: function(event, props, initialDiff){
@@ -709,7 +709,7 @@ module.exports = React.createClass({
         var horiz = props.orientation === 'horizontal'
 
         var targetRegion    = Region.from(this.getHandle())
-        var constrainRegion = Region.from(this.getDOMNode())
+        var constrainRegion = Region.from(this)
 
         var dragSize     = this.getAvailableDragSize(props)
         var initialValue = props.value

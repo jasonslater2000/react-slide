@@ -3,7 +3,7 @@
 var React  = require('react')
 var Slider = require('./src')
 
-var VALUE = 30
+var VALUE = 10
 
 var App = React.createClass({
 
@@ -44,7 +44,7 @@ var App = React.createClass({
                 Current value: {VALUE}
 
                 <Slider
-                    handleFactory={renderHandle}
+                    
                     tickFactory={renderTick}
                     ticks={[0, 30, {value:50, type: 'small'}, 70, 100]}
                     style={firstStyle}
@@ -60,13 +60,14 @@ var App = React.createClass({
                     onChange={this.onChange} value={VALUE}/>
 
                 <Slider
-                    xstartValue={-20}
-                    xendValue={20}
-                    trackRadius={20}
-                    trackStyle={{height: 4}}
-                    trackFillStyle={{backgroundColor: 'red'}}
-                    handleSize={20}
-                    style={{padding: 10, width: 200}}
+                    handleFactory={renderHandle}
+                    startValue={-20}
+                    endValue={20}
+                    xtrackRadius={20}
+                    xtrackStyle={{height: 4}}
+                    xtrackFillStyle={{backgroundColor: 'red'}}
+                    xhandleSize={20}
+                    xstyle={{padding: 10, width: 200}}
                     onChange={this.onChange} value={VALUE}/>
             </div>
         )

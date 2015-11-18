@@ -3,6 +3,32 @@ react-slide
 
 React Slider
 
+## Example
+
+```jsx
+var VALUE = 45
+function onChange(newValue){
+  //...
+}
+
+<Slider
+  startValue={0}
+  endValue={100}
+  value={VALUE}
+  onChange={onChange}
+/>
+
+<Slider
+  orientation="vertical"
+  startValue={-10}
+  endValue={-10}
+  value={5}
+  tickStep={5}
+  handleSize={20}
+/>
+```
+
+
 ## Properties
 
  * value - for controlled behaviour

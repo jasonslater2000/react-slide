@@ -1,8 +1,8 @@
 module.exports = [
     {
-        test: /\.jsx$/,
-        loader: 'babel',
-        exclude: /node_modules/
+        test: /\.jsx?$/,
+        loader: 'babel?presets[]=react,presets[]=es2015',
+        exclude: /(node_modules|bower_components)/
     },
     {
         test: /\.js$/,

@@ -3,7 +3,7 @@
 var React  = require('react')
 var Slider = require('./src')
 
-var VALUE = 10
+var VALUE = null
 
 var App = React.createClass({
 
@@ -61,8 +61,8 @@ var App = React.createClass({
 
                 <Slider
                     handleFactory={renderHandle}
-                    startValue={-20}
-                    endValue={20}
+                    startValue={-100}
+                    endValue={-5}
                     xtrackRadius={20}
                     xtrackStyle={{height: 4}}
                     xtrackFillStyle={{backgroundColor: 'red'}}
